@@ -46,10 +46,10 @@ One of the challenges of tuple matching is that you do not in advance know which
 - model a tuple as a combination of a 'core' tuple which identifies it and a sequence of two-tuples comprising its type, its value and a hash of the value, where the value is the object itself serialised into a byte array:
 
     `{
-	    `type: "integer",
-	    `value: 0xAB, 0x67, 0x03
-	    `hash: <hash value>	
-    `}
+	    type: "integer",
+	    value: 0xAB, 0x67, 0x03
+	    hash: ...some hash value...	
+    }`
 
 - these two-tuples are stored in mongodb collections with a separate collection for each element named "1" to "n" where n is the largest length of tuple you intend to support, and sharded on the 'hash' key.
 
