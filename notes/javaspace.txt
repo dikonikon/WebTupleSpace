@@ -1,0 +1,24 @@
+public interface JavaSpace {
+    Lease write(Entry e, Transaction txn, long lease)
+        throws RemoteException, TransactionException;
+    public final long NO_WAIT = 0; // don't wait at all
+    Entry read(Entry tmpl, Transaction txn, long timeout)
+        throws TransactionException, UnusableEntryException,
+               RemoteException, InterruptedException;
+    Entry readIfExists(Entry tmpl, Transaction txn, 
+                       long timeout)
+        throws TransactionException, UnusableEntryException,
+               RemoteException, InterruptedException;
+    Entry take(Entry tmpl, Transaction txn, long timeout)
+        throws TransactionException, UnusableEntryException,
+               RemoteException, InterruptedException;
+    Entry takeIfExists(Entry tmpl, Transaction txn, 
+                       long timeout)
+        throws TransactionException, UnusableEntryException,
+               RemoteException, InterruptedException;
+    EventRegistration notify(Entry tmpl, Transaction txn,
+              RemoteEventListener listener, long lease,
+              MarshalledObject handback)
+        throws RemoteException, TransactionException;
+    Entry snapshot(Entry e) throws RemoteException;
+}
