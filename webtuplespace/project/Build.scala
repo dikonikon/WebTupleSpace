@@ -11,7 +11,8 @@ object ApplicationBuild extends Build {
     // Add your project dependencies here,
     jdbc,
     anorm,
-    "org.mongodb" %% "casbah" % "2.5.0"
+    "org.mongodb" %% "casbah" % "2.5.0",
+    "bouncycastle" % "bcprov-jdk16" % "140"
   )
 
 
