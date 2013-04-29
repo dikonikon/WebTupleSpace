@@ -43,6 +43,10 @@ The following describes some of the challenges and proposed approach to solving 
 
 One of the challenges of tuple matching is that you do not in advance know which elements of a tuple will be matched against.
 
+Order and type are significant in tuples: (1, "one") does not match ("one", 1) so it isn't possible to model tuples straightforwardly as mongo documents for example.
+
+So, here in outline is the way WebTupleSpace aims to model tuples with the aim of achieving constant time with the length of tuples:
+
 - model a tuple as a combination of a 'core' tuple which identifies it and a sequence of two-tuples comprising its type, its value and a hash of the value, where the value is the object itself serialised into a byte array:
 
     `{

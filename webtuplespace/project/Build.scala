@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
     jdbc,
     anorm,
     "org.mongodb" %% "casbah" % "2.5.0",
-    "bouncycastle" % "bcprov-jdk16" % "140"
+    "org.json4s" %% "json4s-native" % "3.2.4"
   )
 
 

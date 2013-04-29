@@ -10,25 +10,32 @@ package com.dikonikon.tuplespace
 
 import java.io.{ObjectOutputStream, ByteArrayOutputStream}
 import java.security.MessageDigest
+import org.json4s._
+
 
 /**
  * WSTuple transforms a variety of forms of inputs into the form required to store it in WebTupleSpace.
  * Forms supported:
  * A Scala Product (which includes Scala Tuples)
- * A JSON string representation
+ * A JSON string representation with the following structureL
+ * {
+ *    "string": "<value as stringified byte array>",
+ *    ...
+ * }
+ *
  * An XML document with the following structure:
  * <code>
  * <Tuple>
  *   <Field>
  *     <Type>string</Type>
- *     <Value>value</Value>
+ *     <Value>value as stringified byte array</Value>
  *     ...
  *   </Field>
  * </Tuple>
  * </code>
  */
 trait WSTuple {
-  var internal: List[(String, Array[Byte], Array[Byte])] = Nil
+  private var internal: List[(String, Array[Byte], Array[Byte])] = Nil
 }
 
 object WSTuple {
