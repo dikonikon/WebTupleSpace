@@ -10,61 +10,68 @@ package com.dikonikon.tuplespace
 
 import java.io.{ObjectOutputStream, ByteArrayOutputStream}
 import java.security.MessageDigest
-import org.json4s._
-
+import scala.xml.Elem
+import scala.xml.Node
+import scala.xml.NodeSeq
 
 /**
  * WSTuple transforms a variety of forms of inputs into the form required to store it in WebTupleSpace.
  * Forms supported:
  * A Scala Product (which includes Scala Tuples)
- * A JSON string representation with the following structureL
- * {
- *    "string": "<value as stringified byte array>",
- *    ...
- * }
- *
  * An XML document with the following structure:
  * <code>
  * <Tuple>
  *   <Field>
  *     <Type>string</Type>
  *     <Value>value as stringified byte array</Value>
- *     ...
  *   </Field>
+ *   ...
  * </Tuple>
  * </code>
+ * JSON strings cannot be used in their vanilla form because the ordering of elements in a JSON string is not
+ * significant or preserved, so if it is supported as a payload the ordering will need to be explicitly
+ * represented in the data structure.
  */
-trait WSTuple {
-  private var internal: List[(String, Array[Byte], Array[Byte])] = Nil
+trait WSTuple[T] {
+  var internal: List[(String, Array[Byte], Array[Byte])] = Nil
+  var original: T
 }
 
 object WSTuple {
 
-  class ProductWSTuple[T](val original: Product) extends WSTuple {
+  private def toBytes(x: Any): Array[Byte] = {
+    val t = x.asInstanceOf[scala.Serializable]
+    val buffer = new ByteArrayOutputStream()
+    val out = new ObjectOutputStream(buffer)
+    out.writeObject(t)
+    buffer.toByteArray
+  }
 
-    private def toBytes(x: Any): Array[Byte] = {
-      val t = x.asInstanceOf[scala.Serializable]
-      val buffer = new ByteArrayOutputStream()
-      val out = new ObjectOutputStream(buffer)
-      out.writeObject(t)
-      buffer.toByteArray
-    }
+  private def toHash(x: Array[Byte]): Array[Byte] = {
+    val m = MessageDigest.getInstance("SHA-256")
+    m.update(x)
+    m.digest()
+  }
 
-    private def toHash(x: Array[Byte]): Array[Byte] = {
-      val m = MessageDigest.getInstance("SHA-256")
-      m.update(x)
-      m.digest()
-    }
-
+  class ProductWSTuple[T <: Product](override var original: T) extends WSTuple[T] {
     internal = {
-      val x = List[(String, Array[Byte], Array[Byte])]()
-
-       x ++ original.productIterator.map(x => {
+      List[(String, Array[Byte], Array[Byte])]() ++ original.productIterator.map(x => {
           val t = toBytes(x)
           val h = toHash(t)
           (x.getClass.toString, t, h)})
     }
   }
 
-  def apply(tuple: Product): WSTuple = new ProductWSTuple(tuple)
+  class XMLWSTuple[T <: Elem] (override var original: T) extends WSTuple[T] {
+    internal = {
+        List[(String, Array[Byte], Array[Byte])]() ++ (original \\ "Field").map(x => {
+          val t = x \\ "Type"
+          val v = x \\ "Value"
+          (t.text, v.text.getBytes, toHash(v.text.getBytes))
+        })
+    }
+  }
+
+  def apply(tuple: Product): WSTuple[Product] = new ProductWSTuple[Product](tuple)
+  def apply(tuple: Elem): WSTuple[Elem] = new XMLWSTuple[Elem](tuple)
 }
