@@ -1,7 +1,7 @@
 WebTupleSpace
 =============
 
-A web enabled, horizontally scalable tuplespace
+A web enabled, horizontally scalable tuplespace, picking up where PyTupleSpace left off: https://github.com/dikonikon/PyTupleSpace
 
 WebTupleSpace aims to provide a place for dynamic and loosely coupled interaction and exchange of objects in a distributed system such as the internet.
 
