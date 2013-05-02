@@ -47,18 +47,22 @@ Order and type are significant in tuples: (1, "one") does not match ("one", 1) s
 
 So, here in outline is the way WebTupleSpace aims to model tuples with the aim of achieving constant time with the length of tuples:
 
-- model a tuple as a combination of a 'core' tuple which identifies it and a sequence of two-tuples comprising its type, its value and a hash of the value, where the value is the object itself serialised into a byte array:
+- model a tuple as a combination of a 'core' tuple which identifies it and a sequence of three-tuples comprising its type, its value and a consistent hash of the value, where the value is the object itself serialised into a byte array:
 
     `{
 	    type: "integer",
 	    value: 0xAB, 0x67, 0x03
-	    hash: ...some hash value...	
+	    hash: ...some consistent hash value...	
     }`
 
-- these two-tuples are stored in mongodb collections with a separate collection for each element named "1" to "n" where n is the largest length of tuple you intend to support, and sharded on the 'hash' key.
+- these three-tuples are stored in mongodb collections with a separate collection for each element named "1" to "n" where n is the largest length of tuple you intend to support, and sharded on the 'hash' key.
 
 - matching is done by deconstructing the matching template in this way and concurrently looking up in the appropriate collection by issuing multiple concurrent requests using akka, and collecting the results into a sequence of collections. If the same tuple is referenced in all the resulting sets of tuples then this is a match.
 
-- akka should ensure that the requests to mongodb are non-blocking, and provides a convenient way of coordinating the requests and collecting the results.  
+- akka should ensure that the requests to mongodb are non-blocking, and provides a convenient way of coordinating the requests and collecting the results.
+
+- locating each tuple-element collection in a separate collection should yield constant lookup time for short to long tuples.
+
+- provided the hash is in effect random, but consistent, the auto-sharding behaviour of MongoDB should provide a good distribution of storage and compute for lookup, and route each element lookup to the correct chunk in constant time
 	
 
