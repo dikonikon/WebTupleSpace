@@ -2,7 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-import com.dikonikon.tuplespace.WSTuple
+import com.dikonikon.tuplespace.WebTuple
 
 object WebTupleSpace extends Controller {
   /**
@@ -12,7 +12,7 @@ object WebTupleSpace extends Controller {
   def out = Action {
     request => {
       val tupleDoc = request.body.asXml
-      val wsTuple = WSTuple(tupleDoc)
+      val wsTuple = WebTuple(tupleDoc)
       Ok("working on it!").as("application/xml")
     }
   }

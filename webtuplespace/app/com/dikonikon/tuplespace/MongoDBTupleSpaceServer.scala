@@ -12,36 +12,32 @@ import com.mongodb.casbah.Imports._
  */
 
 
-class MongoDBTupleSpaceServer extends TupleSpaceServer {
+class MongoDBTupleSpaceServer(host: String, port: Int, dbname: String) extends TupleSpaceServer {
 
+  val db = MongoConnection(host, port)(dbname)
   /**
    * Happy day scenarios only for now
    * @param tuple
    * @return
    */
-  private def saveTuple(tuple: WSTuple): WSTuple = {
-    val tuples = MongoConnection()("test")("tuples")
-    val t = MongoDBObject()
+  private def saveTuple(tuple: WebTuple): WebTuple = {
+    val tuples = db("tuples")
+    val t = MongoDBObject("tuple" -> tuple.original)
     tuples += t
-    tuple.id = t.get("_id").toString
+    tuple.id = t._id.get.toString
     var i: Int = 0;
     for (e <- tuple.internal) {
       i = i + 1
-      val elements = MongoConnection()("test")("elements" + i)
-      val element = MongoDBObject("tupleid" -> tuple.id, "type" -> e._1, "value" -> e._2, "hash" -> e._3)
+      val elements = db("elements" + i)
+      val element = MongoDBObject("tupleid" -> t._id, "type" -> e._1, "value" -> e._2, "hash" -> e._3)
       elements += element
     }
     tuple
   }
 
-  override def out(tuple: WSTuple) = {
-
-    val id = saveTuple(tuple)
-    for (e <- tuple.internal) {
-      // create object from each element together with id
-      // how do we identify and fix inconsistencies if the save happens half way
-    }
+  override def out(tuple: WebTuple): WebTuple = {
+    saveTuple(tuple)
   }
 
-  override def in(pattern: WSTuple) = None
+  override def in(pattern: WebTuple) = None
 }
