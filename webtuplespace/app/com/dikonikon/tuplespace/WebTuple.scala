@@ -8,12 +8,9 @@
 
 package com.dikonikon.tuplespace
 
-import java.io.{ObjectOutputStream, ByteArrayOutputStream}
 import java.security.MessageDigest
 
-import sun.misc.BASE64Decoder
-
-import scala.xml.Elem
+import scala.xml.NodeSeq
 
 /**
  * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it in WebTupleSpace.
@@ -23,27 +20,34 @@ import scala.xml.Elem
  * <Tuple>
  *   <Element>
  *     <Type>string</Type>
- *     <Value>value as base 64 encoded byte array</Value>
+ *     <Value>value as base 64 encoded String</Value>
  *   </Element>
  *   ...
  * </Tuple>
  * </code>
- * JSON strings cannot be used in their vanilla form because the ordering of elements in a JSON string is not
+ * JSON strings are of the following format:
+ * {
+ *  <other headers...tbc>
+ *  data: [{type: string, value: value as base 64 encoded String}, ...]
+ * }
+ *
+ * If the value is flagged as encoded it is converted to a byte array.
+ *
+ * ??? why unencode the values, either in the JSON string or the XML? They are used only to match on...
+ *
  * significant or preserved, so if it is supported as a payload the ordering will need to be explicitly
  * represented in the data structure.
  */
-trait WebTuple {
+trait WebTuple extends {
   var id: String = null
-  var internal: List[(String, Array[Byte], Array[Byte])] = Nil
-  var original: String
+  var internal: List[(String, String, Array[Byte])] = Nil
+  override def equals(obj: Any): Boolean = {
+    val that = obj.asInstanceOf[WebTuple]
+    that.internal == this.internal
+  }
 }
 
 object WebTuple {
-
-  private val decoder = new BASE64Decoder()
-  private def decode(data: String): Array[Byte] = {
-    decoder.decodeBuffer(data)
-  }
 
   private def toHash(x: Array[Byte]): Array[Byte] = {
     val m = MessageDigest.getInstance("SHA-256")
@@ -51,15 +55,15 @@ object WebTuple {
     m.digest()
   }
 
-  class XMLWebTuple[T <: Elem] (override var original: T) extends WebTuple {
+  class XMLWebTuple (var original: NodeSeq) extends WebTuple {
     internal = {
-        List[(String, Array[Byte], Array[Byte])]() ++ (original \\ "Element").map(x => {
+        List[(String, String, Array[Byte])]() ++ (original \\ "Element").map(x => {
           val t = x \\ "Type"
-          val v = decode ((x \\ "Value").text)
-          (t.text, v, toHash(v))
+          val v = (x \\ "Value").text
+          (t.text, v, toHash(v.getBytes))
         })
     }
   }
 
-  def apply(tuple: Elem): WebTuple = new XMLWebTuple(tuple)
+  def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)
 }

@@ -2,6 +2,8 @@ package com.dikonikon.tuplespace
 
 import scala.xml.Elem
 import com.mongodb.casbah.Imports._
+import java.security.MessageDigest
+import javax.xml.ws.WebEndpoint
 
 /**
  * See: https://github.com/dikonikon
@@ -12,7 +14,7 @@ import com.mongodb.casbah.Imports._
  */
 
 
-class MongoDBTupleSpaceServer(host: String, port: Int, dbname: String) extends TupleSpaceServer {
+class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbname: String = "test") extends TupleSpaceServer {
 
   val db = MongoConnection(host, port)(dbname)
   /**
@@ -22,7 +24,7 @@ class MongoDBTupleSpaceServer(host: String, port: Int, dbname: String) extends T
    */
   private def saveTuple(tuple: WebTuple): WebTuple = {
     val tuples = db("tuples")
-    val t = MongoDBObject("tuple" -> tuple.original)
+    val t = MongoDBObject()
     tuples += t
     tuple.id = t._id.get.toString
     var i: Int = 0;
@@ -40,4 +42,24 @@ class MongoDBTupleSpaceServer(host: String, port: Int, dbname: String) extends T
   }
 
   override def in(pattern: WebTuple) = None
+
+  override def start(pattern: WebTuple): String = {
+    val subid: String = addSubscription(pattern)
+    val (m, s) = getMatching(pattern)
+    val builder = MongoDBObject.newBuilder
+    val i: Int = 1;
+    pattern.internal.map (e => {})
+  }
+
+  private def addSubscription(pattern: WebTuple): String = {
+    ""
+  }
+
+  private def getMatching(pattern: WebTuple): (List[WebTuple], List[String]) = {
+    (List[WebTuple](), List[String]())
+  }
+
+  override def end(sessionId: Long): Unit = {
+    throw new NotImplementedError()
+  }
 }

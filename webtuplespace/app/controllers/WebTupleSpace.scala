@@ -12,7 +12,7 @@ object WebTupleSpace extends Controller {
   def out = Action {
     request => {
       val tupleDoc = request.body.asXml
-      val wsTuple = WebTuple(tupleDoc)
+      val wsTuple = WebTuple(tupleDoc.get)
       Ok("working on it!").as("application/xml")
     }
   }
