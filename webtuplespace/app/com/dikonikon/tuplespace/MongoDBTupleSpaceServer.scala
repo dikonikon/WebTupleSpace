@@ -17,53 +17,79 @@ import com.mongodb.casbah.commons.ValidBSONType.ObjectId
 
 class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbname: String = "test") extends TupleSpaceServer {
 
-  val db = MongoConnection(host, port)(dbname)
-  /**
-   * Happy day scenarios only for now
-   * @param tuple
-   * @return
-   */
-  private def saveTuple(tuple: WebTuple): WebTuple = {
-    val tupleid = newTuple
-    tuple.id = tupleid.toString
-    saveOrUpdateElements(tuple, tupleid)
-    tuple
+  override def put(tuple: WebTuple): WebTuple = {
+    createTuple(tuple)
   }
 
-  private def saveOrUpdateElements(tuple: WebTuple, tupleid: ObjectId): Unit = {
-    var i: Int = 0;
-    for (e <- tuple.internal) {
+  override def take(pattern: WebTuple) = None
+
+  override def subscribe(pattern: WebTuple): String = {
+    val (m, s) = findMatching(pattern)
+    val builder = MongoDBObject.newBuilder
+    val i: Int = 1;
+    pattern.internal.map (e => {})
+  }
+
+  override def unsubscribe(sessionId: Long): Unit = {
+    throw new NotImplementedError()
+  }
+
+  private val db = MongoConnection(host, port)(dbname)
+
+  /**
+   * Happy day scenarios only for now
+   * @param webtuple
+   * @return
+   */
+  private def createTuple(webtuple: WebTuple): WebTuple = {
+    val mongotupleid = createTuple
+    webtuple.id = mongotupleid.toString
+    createOrUpdateElements(webtuple, mongotupleid)
+    webtuple
+  }
+
+  private def createOrUpdateElements(webtuple: WebTuple, mongotupleid: ObjectId): Unit = {
+    var i: Int = 0
+    val elementObjectIds = MongoDBList()
+    for (e <- webtuple.internal) {
       i = i + 1
       val eDbObjOpt = findElementObject(e, i)
       eDbObjOpt match {
-        case None => addNewElement(e, tupleid, i)
+        case None => { elementObjectIds += createNewElement(e, mongotupleid, i); }
         case Some(eObj) => {
-          addTupleIdToElement(eObj, tupleid, i)
+          updateElementWithTupleId(eObj, mongotupleid, i)
         }
       }
+      updateTupleWithElementIds(mongotupleid, elementObjectIds)
     }
   }
 
-  private def newTuple(): ObjectId = {
+  private def updateTupleWithElementIds(mongotupleid: ObjectId, elementObjectIds: MongoDBList): Unit = {
+    val tuples = db("tuples")
+    tuples.update(MongoDBObject("_id" -> mongotupleid), MongoDBObject("elementids" -> elementObjectIds))
+  }
+
+  private def createTuple(): ObjectId = {
     val t = MongoDBObject()
     val tuples = db("tuples")
     tuples += t
     t._id.get
   }
 
-  private def addTupleIdToElement(e: DBObject, tupleId: ObjectId, sequ: Int): Unit = {
+  private def updateElementWithTupleId(e: DBObject, tupleId: ObjectId, sequ: Int): Unit = {
     val elements = db("elements" + sequ)
     val newIds = MongoDBList()
     newIds ++ e("tupleids").asInstanceOf[MongoDBList]
     elements.update(MongoDBObject("_id" -> e._id), MongoDBObject("tupleids" -> newIds))
   }
 
-  private def addNewElement(e: (String, String, Array[Byte]), tupleid: ObjectId, sequ: Int): Unit = {
+  private def createNewElement(e: (String, String, Array[Byte]), tupleid: ObjectId, sequ: Int): ObjectId = {
     val elements = db("elements" + sequ)
     val tupleids = MongoDBList()
     tupleids += tupleid
     val element = MongoDBObject("tupleids" -> tupleids, "type" -> e._1, "value" -> e._2, "hash" -> e._3)
     elements += element
+    element._id.get
   }
 
   private def findElementObject(pattern: (String, String, Array[Byte]), sequ: Int): Option[DBObject] = {
@@ -71,32 +97,50 @@ class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbn
     elements.findOne(MongoDBObject("hash" -> pattern._3))
   }
 
-  private def findElements(pattern: WebTuple): List[MongoDBObject] = {
-
+  /*
+  Iterate through each non-None element in the pattern, and find the matching elements if they exist.
+  If at any point an element doesn't match abandon the search since if any element doesn't match
+  the tuple doesn't match.
+   */
+  private def findMatchingElementObjects(pattern: WebTuple): List[DBObject] = {
+    var sequ = 0
+    var matchingElements = List[DBObject]()
+    for (e <- pattern.internal) {
+      sequ = sequ + 1;
+      e match {
+        case None =>
+        case x => findElementObject(e, sequ) match {
+          case None => return List[DBObject]()
+          case Some(x) => matchingElements = x :: matchingElements
+        }
+      }
+    }
+    matchingElements
   }
 
-  override def out(tuple: WebTuple): WebTuple = {
-    saveTuple(tuple)
-  }
-
-  override def in(pattern: WebTuple) = None
-
-  override def start(pattern: WebTuple): String = {
-    val (m, s) = getMatching(pattern)
-    val builder = MongoDBObject.newBuilder
-    val i: Int = 1;
-    pattern.internal.map (e => {})
-  }
 
   private def addSubscription(pattern: WebTuple): String = {
     ""
   }
+  // TODO: for performance each of the stored Tuples will have to have a list of ObjectIds of the
+  // elements that belong to it
 
-  private def getMatching(pattern: WebTuple): (List[WebTuple], List[String]) = {
-    (List[WebTuple](), List[String]())
+
+  /*
+  1. Find the matching element for each non-None element take the pattern by looking up the hash
+   */
+  private def findMatching(pattern: WebTuple): (List[WebTuple]) = {
+    val elementObjs = findMatchingElementObjects(pattern)
+    val commonTupleIds = findCommonTupleIds(elementObjs)
   }
 
-  override def end(sessionId: Long): Unit = {
-    throw new NotImplementedError()
+  private def findCommonTupleIds(elementObjs: List[DBObject]): List[ObjectId] = {
+    val common: List[MongoDBList] = elementObjs.map(x => x("tupleids").asInstanceOf[MongoDBList])
+
   }
+
+  private def isIn(x: Any, list: List[MongoDBList]): Boolean = {
+
+  }
+
 }

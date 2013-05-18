@@ -6,7 +6,7 @@ import com.dikonikon.tuplespace.WebTuple
 
 object WebTupleSpace extends Controller {
   /**
-   * puts a tuple into the TupleSpace
+   * puts a webtuple into the TupleSpace
    * @return
    */
   def out = Action {

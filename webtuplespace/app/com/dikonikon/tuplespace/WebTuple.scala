@@ -13,7 +13,7 @@ import java.security.MessageDigest
 import scala.xml.NodeSeq
 
 /**
- * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it in WebTupleSpace.
+ * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it take WebTupleSpace.
  * Forms supported:
  * An XML document with the following structure:
  * <code>
@@ -33,10 +33,10 @@ import scala.xml.NodeSeq
  *
  * If the value is flagged as encoded it is converted to a byte array.
  *
- * ??? why unencode the values, either in the JSON string or the XML? They are used only to match on...
+ * ??? why unencode the values, either take the JSON string or the XML? They are used only to match on...
  *
  * significant or preserved, so if it is supported as a payload the ordering will need to be explicitly
- * represented in the data structure.
+ * represented take the data structure.
  */
 trait WebTuple extends {
   var id: String = null
