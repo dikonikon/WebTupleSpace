@@ -54,7 +54,7 @@ object WebTuple {
         List[(String, String, Array[Byte])]() ++ (original \\ "Element").map(x => {
           val t = x \\ "Type"
           val v = (x \\ "Value").text
-          (t.text, v, toHash(v.getBytes))
+          (t.text, v, toHash(t.text.getBytes ++ v.getBytes))
         })
     }
   }

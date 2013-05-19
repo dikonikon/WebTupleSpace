@@ -30,39 +30,14 @@ A simple way to achieve this latter style of integration is to use a tuplespace 
 
 # Current Status
 
-Currently working on a test implementation in Scala which is basically a port of the previous Python-based test server.
+Current work focused on creating a version using MongoDB for persistence of tuples. The aim is to use MongoDB's autosharding to arrive at constant time matching using consistent hashing of key fields of the tuples to yield both index fields in the tuple elements and a sharding field in the tuple itself, comprising a hash of each of the element hashes. 
 
-Current work focuses on:
+This approach utilizes a MongoDB document representation of the tuples utilizing embedded documents:
 
-* richer representation of tuples including explicit annotation of the types of elements: current representation is as a list of byte arrays, which are assumed to incorporate type information. This has the benefit of being simple both to implement and to create language bindings for, but it has significant drawbacks. For example semantically equivalent tuples from different bindings are not equivalent, and it presents fewer opportunities for sharding (see next bullet)
-* implementation using Mongodb thinking about approach to auto-sharding. The objective here is to achieve constant time for matching, scaling over very large numbers of tuples.
-
-# Constant time matching
-
-The following describes some of the challenges and proposed approach to solving them, when trying to achieve close to constant time tuple matching for large tuplespaces.
-
-One of the challenges of tuple matching is that you do not in advance know which elements of a tuple will be matched against.
-
-Order and type are significant in tuples: (1, "one") does not match ("one", 1) so it isn't possible to model tuples straightforwardly as mongo documents for example.
-
-So, here in outline is the way WebTupleSpace aims to model tuples with the aim of achieving constant time with the length of tuples:
-
-- model a tuple as a combination of a 'core' tuple which identifies it and a sequence of three-tuples comprising its type, its value and a consistent hash of the value, where the value is the object itself serialised into a byte array:
-
-    `{
-	    type: "integer",
-	    value: 0xAB, 0x67, 0x03
-	    hash: ...some consistent hash value...	
-    }`
-
-- these three-tuples are stored in mongodb collections with a separate collection for each element named "1" to "n" where n is the largest length of tuple you intend to support, and sharded on the 'hash' key.
-
-- matching is done by deconstructing the matching template in this way and concurrently looking up in the appropriate collection by issuing multiple concurrent requests using akka, and collecting the results into a sequence of collections. If the same tuple is referenced in all the resulting sets of tuples then this is a match.
-
-- akka should ensure that the requests to mongodb are non-blocking, and provides a convenient way of coordinating the requests and collecting the results.
-
-- locating each tuple-element collection in a separate collection should yield constant lookup time for short to long tuples.
-
-- provided the hash is in effect random, but consistent, the auto-sharding behaviour of MongoDB should provide a good distribution of storage and compute for lookup, and route each element lookup to the correct chunk in constant time
+{
+  _id: ObjectId
+  e1: { type: <String rep of type>, value: <base64 or other encoding of value>, hash: <RSA256 hash of type concat value> },
+  e2: ...
+}
 	
 
