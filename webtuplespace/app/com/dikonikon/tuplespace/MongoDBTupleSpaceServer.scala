@@ -122,9 +122,11 @@ class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbn
   private def addSubscription(pattern: WebTuple): String = {
     ""
   }
-  // TODO: for performance each of the stored Tuples will have to have a list of ObjectIds of the
-  // elements that belong to it
 
+  // TODO: hmmm... I may have this all wrong. Maybe should use one collection, sharded over hash
+  // each tuple is an object with elements e1, e2, e3... and the collection is indexed on them all
+  // each element is an embedded document of the form { "type", "value", "hash" }
+  // need to work out whether this works - maybe its a lot simpler and its atomic
 
   /*
   1. Find the matching element for each non-None element take the pattern by looking up the hash
@@ -135,12 +137,17 @@ class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbn
   }
 
   private def findCommonTupleIds(elementObjs: List[DBObject]): List[ObjectId] = {
-    val common: List[MongoDBList] = elementObjs.map(x => x("tupleids").asInstanceOf[MongoDBList])
-
+    val tupleRefLists: List[MongoDBList] = elementObjs.map(x => x("tupleids").asInstanceOf[MongoDBList])
+    val firstList = tupleRefLists.head
+    val otherLists = tupleRefLists.tail
+    List[ObjectId]() ++ firstList.filter(inAllLists(_, otherLists)).map(x => x.asInstanceOf[ObjectId])
   }
 
-  private def isIn(x: Any, list: List[MongoDBList]): Boolean = {
-
+  private def inAllLists(x: Any, list: List[MongoDBList]): Boolean = {
+    for (l <- list) {
+      if (!l.contains(x)) return false;
+    }
+    true
   }
 
 }
