@@ -1,5 +1,7 @@
 package com.dikonikon
 
+import java.security.MessageDigest
+
 /**
  * See: https://github.com/dikonikon
  * This is open source software provided under the license
@@ -9,4 +11,9 @@ package com.dikonikon
  */
 package object tuplespace {
   def genSubId: String = ""
+  def toHash(x: Array[Byte]): Array[Byte] = {
+    val m = MessageDigest.getInstance("SHA-256")
+    m.update(x)
+    m.digest()
+  }
 }

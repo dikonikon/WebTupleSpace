@@ -13,7 +13,7 @@ import java.security.MessageDigest
 import scala.xml.NodeSeq
 
 /**
- * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it take WebTupleSpace.
+ * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it takeOne WebTupleSpace.
  * Forms supported:
  * An XML document with the following structure:
  * <code>
@@ -33,10 +33,10 @@ import scala.xml.NodeSeq
  *
  * If the value is flagged as encoded it is converted to a byte array.
  *
- * ??? why unencode the values, either take the JSON string or the XML? They are used only to match on...
+ * ??? why unencode the values, either takeOne the JSON string or the XML? They are used only to match on...
  *
  * significant or preserved, so if it is supported as a payload the ordering will need to be explicitly
- * represented take the data structure.
+ * represented takeOne the data structure.
  */
 trait WebTuple extends {
   var id: String = null
@@ -49,12 +49,6 @@ trait WebTuple extends {
 
 object WebTuple {
 
-  private def toHash(x: Array[Byte]): Array[Byte] = {
-    val m = MessageDigest.getInstance("SHA-256")
-    m.update(x)
-    m.digest()
-  }
-
   class XMLWebTuple (var original: NodeSeq) extends WebTuple {
     internal = {
         List[(String, String, Array[Byte])]() ++ (original \\ "Element").map(x => {
@@ -66,4 +60,5 @@ object WebTuple {
   }
 
   def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)
+  def apply() = new WebTuple {}
 }
