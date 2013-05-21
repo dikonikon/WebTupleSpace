@@ -1,0 +1,9 @@
+{
+  shardHash: <SHA256 hash of each element's hash concatenated in order>
+  e1: {
+    type: <String representing type>,
+    value: <Base64 or other encoding of value>,
+    hash: <SHA256 hash of <type> concat <value>>
+  }
+  e2: ...
+}

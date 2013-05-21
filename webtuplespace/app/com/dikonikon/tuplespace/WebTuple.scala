@@ -11,6 +11,10 @@ package com.dikonikon.tuplespace
 import java.security.MessageDigest
 
 import scala.xml.NodeSeq
+import com.mongodb.casbah.MongoCursor
+import com.mongodb.casbah.commons.MongoDBObject
+import sun.java2d.pipe.BufferedTextPipe
+import scala.collection.mutable.ListBuffer
 
 /**
  * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it takeOne WebTupleSpace.
@@ -59,6 +63,18 @@ object WebTuple {
     }
   }
 
+  class MongoDBObjectWebTuple(var original: MongoDBObject) extends WebTuple {
+    internal = {
+      var i = 1
+      val l = ListBuffer[(String, String, Array[Byte])]()
+      while(original.contains("e" + i)) {
+        l += original.as[(String, String, Array[Byte])]("e" + i); i = i + 1
+      }
+      l.toList
+    }
+  }
+
   def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)
+  def apply(tuple: MongoDBObject): WebTuple = new MongoDBObjectWebTuple(tuple)
   def apply() = new WebTuple {}
 }

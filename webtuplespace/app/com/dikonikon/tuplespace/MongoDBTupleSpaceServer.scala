@@ -15,10 +15,13 @@ import com.mongodb.casbah.commons.ValidBSONType.ObjectId
  */
 
 
-class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbname: String = "test") extends TupleSpaceServer {
+class MongoDBTupleSpaceServer() extends TupleSpaceServer {
+
+  import MongoDBTupleOps._
 
   override def put(tuple: WebTuple): WebTuple = {
     createTuple(tuple)
+    // todo: does this now trigger a subscription?
   }
 
   // todo:
@@ -31,34 +34,5 @@ class MongoDBTupleSpaceServer(host: String = "localhost", port: Int = 27017, dbn
 
   override def unsubscribe(sessionId: Long): Unit = {
     throw new NotImplementedError()
-  }
-
-  private val db = MongoConnection(host, port)(dbname)
-
-  /**
-   * Happy day scenarios only for now
-   * @param webtuple
-   * @return
-   */
-  private def createTuple(webtuple: WebTuple): WebTuple = {
-    var i = 1
-    val builder = MongoDBObject.newBuilder
-    val shardHashTarget = Array[Byte]()
-    for (e <- webtuple.internal) {
-      val element = MongoDBObject("type" -> e._1, "value" -> e._2, "hash" -> e._3)
-      builder += "e" + i -> element
-      i = i + 1
-      shardHashTarget ++ e._3
-    }
-    builder += "shardHash" -> toHash(shardHashTarget)
-    val tuples = db("tuples")
-    val mongoTuple = builder.result
-    tuples += mongoTuple
-    webtuple.id = mongoTuple._id.get.toString
-    webtuple
-  }
-
-  private def addSubscription(pattern: WebTuple): String = {
-    ""
   }
 }
