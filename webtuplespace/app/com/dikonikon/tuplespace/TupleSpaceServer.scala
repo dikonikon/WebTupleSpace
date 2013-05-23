@@ -5,7 +5,8 @@ import com.mongodb.casbah.Imports._
 import com.mongodb.casbah.query.Imports._
 
 trait TupleSpaceServer {
-  def takeOne(pattern: WebTuple)
+  def take(pattern: WebTuple): WebTuple
+  def read(pattern: WebTuple): List[WebTuple]
   def put(tuple: WebTuple): WebTuple
   def subscribe(pattern: WebTuple): String
   def unsubscribe(sessionId: Long)

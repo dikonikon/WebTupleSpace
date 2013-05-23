@@ -1,6 +1,7 @@
 package com.dikonikon.tuplespace
 
 import com.mongodb.casbah.Imports._
+import play.Logger
 
 /**
  * See: https://github.com/dikonikon
@@ -11,7 +12,7 @@ import com.mongodb.casbah.Imports._
  */
 class MongoDBTupleOps() {
   private val conf = MongoDBConfig()
-  private val db = MongoConnection(conf.host, conf.port)(conf.dbname)
+  private val database = MongoConnection(conf.host, conf.port)(conf.dbname)
 
   /**
    * Happy day scenarios only for now
@@ -20,38 +21,43 @@ class MongoDBTupleOps() {
    */
   def createTuple(webtuple: WebTuple): WebTuple = {
     var i = 1
-    val builder = MongoDBObject.newBuilder
+    val tupleObj = MongoDBObject()
     val shardHashTarget = Array[Byte]()
     for (e <- webtuple.internal) {
       val element = MongoDBObject("type" -> e._1, "value" -> e._2, "hash" -> e._3)
-      builder += "e" + i -> element
+      val key = "e" + i.toString
+      tupleObj += key -> element
       i = i + 1
       shardHashTarget ++ e._3
     }
-    builder += "shardKey" -> toHash(shardHashTarget)
-    val tuples = db("tuples")
-    val mongoTuple = builder.result
-    tuples += mongoTuple
-    webtuple.id = mongoTuple._id.get.toString
+    tupleObj += "shardKey" -> toHash(shardHashTarget)
+    val tuples = database("tuples")
+    tuples += tupleObj
+    print(tupleObj.toString)
+    webtuple.id = tupleObj._id.get.toString
     webtuple
   }
 
-  def readMatchingTuples(pattern: WebTuple): List[WebTuple] = {
-    val tuples = db("tuples")
-    val query = MongoDBObject.newBuilder
+  def findMatchingTuples(pattern: WebTuple): List[WebTuple] = {
+    val tuples = database("tuples")
+    val builder = MongoDBObject.newBuilder
     var i = 1
     for (e <- pattern.internal) {
-      query += ("e" + i + ".hash" -> e._3)
+      builder += ("e" + i + ".hash" -> e._3)
       i += 1
     }
+    val query = builder.result
     val matches = tuples.find(query)
     val listOfMatches = List[DBObject]() ++ matches
-    listOfMatches.map(x => WebTuple(x))
+    val m = listOfMatches.map(x => WebTuple(x))
+    m
   }
 
   def addSubscription(pattern: WebTuple): String = {
     ""
   }
+
+  def db = this.database
 }
 
 object MongoDBTupleOps extends MongoDBTupleOps {

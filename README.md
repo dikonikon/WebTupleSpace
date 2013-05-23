@@ -28,6 +28,10 @@ One approach to complex systems integration is to integrate many systems around 
 
 A simple way to achieve this latter style of integration is to use a tuplespace as the platform for the realisation of that model.
 
+# Motivations
+
+
+
 # Current Status
 
 Current work focused on creating a version using MongoDB for persistence of tuples. The aim is to use MongoDB's autosharding to arrive at constant time matching using consistent hashing of key fields of the tuples to yield both index fields in the tuple elements and a sharding field in the tuple itself, comprising a hash of each of the element hashes. 

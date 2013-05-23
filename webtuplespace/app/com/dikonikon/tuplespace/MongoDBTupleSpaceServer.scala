@@ -24,8 +24,12 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
     // todo: does this now trigger a subscription?
   }
 
+  override def read(pattern: WebTuple): List[WebTuple] = {
+    findMatchingTuples(pattern)
+  }
+
   // todo:
-  override def takeOne(pattern: WebTuple): WebTuple = WebTuple()
+  override def take(pattern: WebTuple): List[WebTuple] = null
 
   // todo:
   override def subscribe(pattern: WebTuple): String = {

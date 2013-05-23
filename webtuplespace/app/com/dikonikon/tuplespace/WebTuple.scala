@@ -8,16 +8,14 @@
 
 package com.dikonikon.tuplespace
 
-import java.security.MessageDigest
 
 import scala.xml.NodeSeq
-import com.mongodb.casbah.MongoCursor
 import com.mongodb.casbah.commons.MongoDBObject
-import sun.java2d.pipe.BufferedTextPipe
 import scala.collection.mutable.ListBuffer
+import com.mongodb.BasicDBObject
 
 /**
- * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it takeOne WebTupleSpace.
+ * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it take WebTupleSpace.
  * Forms supported:
  * An XML document with the following structure:
  * <code>
@@ -37,38 +35,54 @@ import scala.collection.mutable.ListBuffer
  *
  * If the value is flagged as encoded it is converted to a byte array.
  *
- * ??? why unencode the values, either takeOne the JSON string or the XML? They are used only to match on...
+ * ??? why unencode the values, either take the JSON string or the XML? They are used only to match on...
  *
  * significant or preserved, so if it is supported as a payload the ordering will need to be explicitly
- * represented takeOne the data structure.
+ * represented take the data structure.
  */
 trait WebTuple extends {
-  var id: String = null
-  var internal: List[(String, String, Array[Byte])] = Nil
+  var id: String
+  def internal: List[(String, String, Array[Byte])]
   override def equals(obj: Any): Boolean = {
     val that = obj.asInstanceOf[WebTuple]
     that.internal == this.internal
+  }
+  override def toString = {
+    val s = new StringBuilder()
+    s.append("(")
+    this.internal.foreach(x => s.append("(").append(x._1).append(",").append(x._2).append(",")
+      .append(x._3.toString).append(")"))
+    s.append(")")
+    s.toString()
   }
 }
 
 object WebTuple {
 
-  class XMLWebTuple (var original: NodeSeq) extends WebTuple {
-    internal = {
+  class XMLWebTuple (var original: NodeSeq, override var id: String = null) extends WebTuple {
+    override def internal = content
+    val content = {
         List[(String, String, Array[Byte])]() ++ (original \\ "Element").map(x => {
-          val t = x \\ "Type"
+          val t = (x \\ "Type").text
           val v = (x \\ "Value").text
-          (t.text, v, toHash(t.text.getBytes ++ v.getBytes))
+          (t, v, toHash(t.getBytes ++ v.getBytes))
         })
     }
+
+
   }
 
-  class MongoDBObjectWebTuple(var original: MongoDBObject) extends WebTuple {
-    internal = {
+  class MongoDBObjectWebTuple(var original: MongoDBObject, override var id: String = null) extends WebTuple {
+    override def internal = content
+    private val content = {
       var i = 1
       val l = ListBuffer[(String, String, Array[Byte])]()
       while(original.contains("e" + i)) {
-        l += original.as[(String, String, Array[Byte])]("e" + i); i = i + 1
+        val e = original.as[BasicDBObject]("e" + i)
+        val nextWebTupleElement = (e.get("type").asInstanceOf[String], e.get("value").asInstanceOf[String],
+          e.get("hash").asInstanceOf[Array[Byte]])
+        l += nextWebTupleElement
+        i = i + 1
       }
       l.toList
     }
@@ -76,5 +90,4 @@ object WebTuple {
 
   def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)
   def apply(tuple: MongoDBObject): WebTuple = new MongoDBObjectWebTuple(tuple)
-  def apply() = new WebTuple {}
 }
