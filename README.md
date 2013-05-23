@@ -30,7 +30,11 @@ A simple way to achieve this latter style of integration is to use a tuplespace 
 
 # Motivations
 
+I've worked with tuplespaces such as JavaSpace in the past, and attempted to develop a scalable tuplespace both in Java, and in .net on Windows Azure, utilizing designs that should provide good scale-out performance such as Rings. It's hard work - there are some challenges with tuplespaces. Tuples themselves have a fairly arbitrary structure, and requests to match on tuples can be on any element within a tuple. When you add a tuple to a space you potentially change the way it should best be indexed.
 
+After previous attempts at it MongoDB seemed like a pretty good platform to build on, particularly for persistent tuples obviously. It supports documents of varying structure within a collection, so tuples with widely varying numbers and types of elements are easy to store, provided you get the representation of them right.
+
+MongoDB's autosharding is attractive as a means of horizontal scale out of the box, provided you can arrive at a shard key that ensures a sufficiently random and even distribution of hashes. By so doing we naturally parallelize queries, adding more server hosts as required.
 
 # Current Status
 
