@@ -36,16 +36,17 @@ After previous attempts at it MongoDB seemed like a pretty good platform to buil
 
 MongoDB's autosharding is attractive as a means of horizontal scale out of the box, provided you can arrive at a shard key that ensures a sufficiently random and even distribution of hashes. By so doing we naturally parallelize queries, adding more server hosts as required.
 
-# Current Status
+WebTupleSpace uses consistent hashing derived in the following way: each element is represented itself as a tuple comprising a string symbolic of its type, a string encoding of its value, and a hash derived by concatenating the type and value fields and applying an RSA256 hashing algorithm to it. The individual element hashes are then concatenated in order and a final RSA256 hash of this byte array is calculated. This becomes the shard key of the tuple. The ordering of the elements is maintained simply by incorporating their index into their names: e1, e2 etc.
 
-Current work focused on creating a version using MongoDB for persistence of tuples. The aim is to use MongoDB's autosharding to arrive at constant time matching using consistent hashing of key fields of the tuples to yield both index fields in the tuple elements and a sharding field in the tuple itself, comprising a hash of each of the element hashes. 
+This should result in a fairly random distribution of tuples across a the range of values created by the output of hashing algorithm. Simply by adding additional mongod instances to a cluster the level of parallelism in the search for tuples can be increased.
 
-This approach utilizes a MongoDB document representation of the tuples utilizing embedded documents:
+Each of the individual elements' hash element is indexed by configuring the anticipated maximum number of elements anticipated at startup.
 
 {
   _id: ObjectId
+  shardKey: <hash of hashes>
   e1: { type: <String rep of type>, value: <base64 or other encoding of value>, hash: <RSA256 hash of type concat value> },
   e2: ...
 }
-	
+
 
