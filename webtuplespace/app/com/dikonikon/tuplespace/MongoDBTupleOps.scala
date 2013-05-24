@@ -38,7 +38,7 @@ class MongoDBTupleOps() {
     webtuple
   }
 
-  def findMatchingTuples(pattern: WebTuple): List[WebTuple] = {
+  def findMatchingTuples(pattern: WebTuple, remove: Boolean = false): List[WebTuple] = {
     val tuples = database("tuples")
     val builder = MongoDBObject.newBuilder
     var i = 1
@@ -50,6 +50,7 @@ class MongoDBTupleOps() {
     val matches = tuples.find(query)
     val listOfMatches = List[DBObject]() ++ matches
     val m = listOfMatches.map(x => WebTuple(x))
+    if (remove) tuples.remove(query, WriteConcern.FsyncSafe)
     m
   }
 

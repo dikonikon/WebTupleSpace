@@ -19,7 +19,7 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
 
   import MongoDBTupleOps._
 
-  override def put(tuple: WebTuple): WebTuple = {
+  override def write(tuple: WebTuple): WebTuple = {
     createTuple(tuple)
     // todo: does this now trigger a subscription?
   }
@@ -28,8 +28,9 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
     findMatchingTuples(pattern)
   }
 
-  // todo:
-  override def take(pattern: WebTuple): List[WebTuple] = null
+  override def take(pattern: WebTuple): List[WebTuple] = {
+    findMatchingTuples(pattern, true)
+  }
 
   // todo:
   override def subscribe(pattern: WebTuple): String = {

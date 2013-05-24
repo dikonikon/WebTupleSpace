@@ -4,7 +4,7 @@
 
 # webtuplespace
 
-GET     /webtuplespace/put                           controllers.WebTupleSpace.out
+GET     /webtuplespace/write                           controllers.WebTupleSpace.out
 
 # Home page
 GET     /                           controllers.Application.index
