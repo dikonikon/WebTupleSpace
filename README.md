@@ -53,10 +53,10 @@ Each of the individual elements' hash element is indexed by configuring the anti
   e2: ...
 }
 
-## Statelss Servers, Persistent Queueing of Requests and Notifications
+## Stateless Servers, Persistent Queueing of Requests and Notifications
 
-As the name implies WebTupleSpace is intended to be used over a WAN or internet, and to scale out to large numbers of tuples and clients. Clearly then it must tolerate failure and must scale horizontally. WebTupleSpace aims to keep the processes providing the request processing and matching behaviour stateless and to keep any processing of requests short-lived, persisting them where necessary and processing them in the background using Scala's Akka actors framework.
+As the name implies WebTupleSpace is intended to be used over a WAN or internet, and to scale out to large numbers of tuples and clients. Clearly then it must tolerate failure and must scale horizontally. WebTupleSpace aims to keep the processes providing the request processing and matching behaviour stateless and to keep any processing of requests short-lived, persisting them where necessary and processing them in the background using the Akka actors framework.
 
-In this way it should be possible to rely on MongoDb's clustering features to provide a tuplespace that is both reliable and can be scaled horizontally simply by adding more WebTupleSpace and mongod processes.
+In this way it is possible to configure a tuplespace that is reliable simply by starting clusters of WebTupleSpace Play server instances, and by utilising MongoDB's clustering features. It can be scaled horizontally simply by adding more WebTupleSpace and mongod processes.
 
 
