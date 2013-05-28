@@ -2,6 +2,7 @@ package com.dikonikon.tuplespace
 
 import com.mongodb.casbah.Imports._
 import play.Logger
+import com.mongodb.casbah.commons.ValidBSONType.ObjectId
 
 /**
  * See: https://github.com/dikonikon
@@ -49,13 +50,21 @@ class MongoDBTupleOps() {
     val query = builder.result
     val matches = tuples.find(query)
     val listOfMatches = List[DBObject]() ++ matches
-    val m = listOfMatches.map(x => WebTuple(x))
     if (remove) tuples.remove(query, WriteConcern.FsyncSafe)
-    m
+    listOfMatches.map(x => WebTuple(x))
   }
 
-  def addSubscription(pattern: WebTuple): String = {
-    ""
+  def createSession(): String = {
+    val sessions = database("sessions")
+    val sessionObj = MongoDBObject()
+    sessions += sessionObj
+    sessionObj._id.get.toString
+  }
+
+  def endSession(sessionId: String): Unit = {
+    val sessions = database("sessions")
+    val id = new ObjectId(sessionId)
+    sessions.remove(MongoDBObject("_id" -> id))
   }
 
   def db = this.database

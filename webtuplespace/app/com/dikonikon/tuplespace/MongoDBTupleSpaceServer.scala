@@ -32,12 +32,20 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
     findMatchingTuples(pattern, true)
   }
 
-  // todo:
-  override def subscribe(pattern: WebTuple): String = {
+  override def startSession(): String = {
     ""
   }
 
-  override def unsubscribe(sessionId: Long): Unit = {
+  override def endSession(sessionId: String): Unit = {
+
+  }
+
+  // todo:
+  override def subscribe(pattern: WebTuple, sessionId: String): String = {
+    ""
+  }
+
+  override def unsubscribe(subscriptionId: String, sessionId: String): Unit = {
     throw new NotImplementedError()
   }
 }

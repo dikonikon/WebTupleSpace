@@ -8,8 +8,10 @@ trait TupleSpaceServer {
   def take(pattern: WebTuple): WebTuple
   def read(pattern: WebTuple): List[WebTuple]
   def write(tuple: WebTuple): WebTuple
-  def subscribe(pattern: WebTuple): String
-  def unsubscribe(sessionId: Long)
+  def startSession(): String
+  def endSession(sessionId: String)
+  def subscribe(pattern: WebTuple, sessionId: String): String
+  def unsubscribe(subscriptionId: String, sessionId: String)
 }
 
 
