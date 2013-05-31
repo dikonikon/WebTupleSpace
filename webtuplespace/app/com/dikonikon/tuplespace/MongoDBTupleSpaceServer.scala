@@ -33,19 +33,23 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
   }
 
   override def startSession(): String = {
-    ""
+    val sessionObj = createSession()
+    sessionObj._id.get.toString
   }
 
   override def endSession(sessionId: String): Unit = {
-
+    deleteSession(sessionId)
   }
 
   // todo:
   override def subscribe(pattern: WebTuple, sessionId: String): String = {
-    ""
+    addSubscription(pattern, sessionId)
+    // check if any tuples satisfy subscription
   }
 
   override def unsubscribe(subscriptionId: String, sessionId: String): Unit = {
     throw new NotImplementedError()
   }
 }
+
+case class NoSessionFoundException() extends RuntimeException

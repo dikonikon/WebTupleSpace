@@ -2,6 +2,7 @@ package com.dikonikon
 
 import java.security.MessageDigest
 
+
 /**
  * See: https://github.com/dikonikon
  * This is open source software provided under the license
@@ -15,5 +16,7 @@ package object tuplespace {
     val m = MessageDigest.getInstance("SHA-256")
     m.update(x)
     m.digest()
+
   }
+
 }

@@ -72,7 +72,7 @@ object WebTuple {
 
   }
 
-  class MongoDBObjectWebTuple(var original: MongoDBObject, override var id: String = null) extends WebTuple {
+  class MongoDBObjectWebTuple(var original: MongoDBObject, override var id: String = original._id.get.toString) extends WebTuple {
     override def internal = content
     private val content = {
       var i = 1

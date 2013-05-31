@@ -1,0 +1,17 @@
+
+Session:
+
+{
+	_id: ObjectId(),
+	subscriptions: [Subscription],
+	notifications: [ObjectId]
+}
+
+Subscription:
+
+{
+	query: DBObject that matches tuples to this (using hashes)
+	pattern: DBObject rep of tuple
+	notifications: [ObjectId]
+}
+
