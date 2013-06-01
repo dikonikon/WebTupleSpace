@@ -36,7 +36,7 @@ I've worked with tuplespaces such as JavaSpace in the past, and attempted to dev
 
 After previous attempts at it MongoDB seemed like a pretty good platform to solve this problem. It supports documents of varying structure within a collection, so tuples with widely varying numbers and types of elements are easy to store, provided you get the representation of them right.
 
-MongoDB's autosharding is attractive as a means of horizontal scale out of the box, provided you can arrive at a shard key that ensures a sufficiently random and even distribution of hashes. By so doing we naturally parallelize queries, adding more server hosts as required.
+MongoDB's autosharding is attractive as a means of horizontal scale out, provided you can arrive at a shard key that ensures a sufficiently random and even distribution of hashes. By so doing we naturally parallelize queries, adding more server hosts as required.
 
 WebTupleSpace uses consistent hashing derived in the following way: each element is represented itself as a tuple comprising a string symbolic of its type, a string encoding of its value, and a hash derived by concatenating the type and value fields and applying an RSA256 hashing algorithm to it. The individual element hashes are then concatenated in order and a final RSA256 hash of this byte array is calculated. This becomes the shard key of the tuple. The ordering of the tuple elements is ensured simply by incorporating their index into their names: e1, e2 etc.
 
@@ -45,13 +45,14 @@ The hash at the tuple level is used for sharding, and the hashes at the element 
 This should result in a fairly random distribution of tuples across a the range of values created by the output of hashing algorithm. Simply by adding additional mongod instances to a cluster the level of parallelism in the search for tuples can be increased.
 
 Each of the individual elements' hash element is indexed by configuring the anticipated maximum number of elements anticipated at startup, which should yield pretty good query performance and of course you only have to query on the elements that are present in the matching pattern.
-
+```
 {
   _id: ObjectId
   shardKey: <hash of hashes>
   e1: { type: <String rep of type>, value: <base64 or other encoding of value>, hash: <RSA256 hash of type concat value> },
   e2: ...
 }
+```
 
 ## Stateless Servers, Persistent Queueing of Requests and Notifications
 
