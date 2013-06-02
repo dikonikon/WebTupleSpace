@@ -12,7 +12,7 @@ import com.mongodb.casbah.commons.MongoDBObject
  * Time: 14:54
  */
 package object test {
-  def createTestTuples {
+  def createTestWebTuples {
     val webTuple1 = WebTuple(<Tuple>
       <Element><Type>String</Type><Value>avalue1</Value></Element>
       <Element><Type>Int</Type><Value>AES</Value></Element>

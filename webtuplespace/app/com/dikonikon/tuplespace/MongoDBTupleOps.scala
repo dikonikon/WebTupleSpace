@@ -67,7 +67,7 @@ class MongoDBTupleOps() {
 
   def addNotifications(subscription: MongoDBObject): Unit = {
     val tuples = database("tuples")
-    val cursor = tuples.find(subscription("query"))
+    val cursor = tuples.find(subscription.as[MongoDBObject]("query"))
     val notifications = subscription.as[MongoDBList]("notifications")
     for (t <- cursor) {
       if (!notifications.contains(t)) notifications += t

@@ -42,9 +42,8 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
   }
 
   // todo:
-  override def subscribe(pattern: WebTuple, sessionId: String): String = {
+  override def subscribe(pattern: WebTuple, sessionId: String): Unit = {
     addSubscription(pattern, sessionId)
-    // check if any tuples satisfy subscription
   }
 
   override def unsubscribe(subscriptionId: String, sessionId: String): Unit = {

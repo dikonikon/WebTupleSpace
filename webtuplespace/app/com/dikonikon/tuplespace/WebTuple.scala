@@ -72,7 +72,7 @@ object WebTuple {
 
   }
 
-  class MongoDBObjectWebTuple(var original: MongoDBObject, override var id: String = original._id.get.toString) extends WebTuple {
+  class MongoDBObjectWebTuple(var original: MongoDBObject) extends WebTuple {
     override def internal = content
     private val content = {
       var i = 1
@@ -86,6 +86,7 @@ object WebTuple {
       }
       l.toList
     }
+    override var id: String = original._id.get.toString
   }
 
   def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)

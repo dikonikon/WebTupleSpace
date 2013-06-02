@@ -23,7 +23,7 @@ class MongoDBTupleOpsComponentSpec extends Specification {
 
     "respond with one tuple" in  {
       cleanTestDB
-      createTestTuples
+      createTestWebTuples
       val pattern = WebTuple(<Tuple><Element><Type>String</Type><Value>avalue1</Value></Element></Tuple>)
       val result: List[WebTuple] = findMatchingTuples(pattern)
       result.size should be equalTo(1)
