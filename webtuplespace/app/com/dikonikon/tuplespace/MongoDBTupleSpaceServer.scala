@@ -32,10 +32,7 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
     findMatchingTuples(pattern, true)
   }
 
-  override def startSession(): String = {
-    val sessionObj = createSession()
-    sessionObj._id.get.toString
-  }
+  override def startSession(): String = createSession()
 
   override def endSession(sessionId: String): Unit = {
     deleteSession(sessionId)
@@ -52,3 +49,9 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
 }
 
 case class NoSessionFoundException() extends RuntimeException
+
+case class NoSubscriptionFound() extends RuntimeException
+
+case class NoSubscriptionListFound() extends RuntimeException
+
+case class NoNotificationFound() extends RuntimeException

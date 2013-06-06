@@ -25,9 +25,13 @@ package object test {
     createTuple(webTuple2)
   }
 
+  def testPattern = WebTuple(<Tuple><Element><Type>String</Type><Value>avalue1</Value></Element></Tuple>)
+
   def cleanTestDB {
-    val collection = db("tuples")
-    collection.underlying.remove(MongoDBObject(), WriteConcern.FsyncSafe)
+    val tuples = db("tuples")
+    val sessions = db("sessions")
+    tuples.remove(MongoDBObject(), WriteConcern.FsyncSafe)
+    sessions.remove(MongoDBObject(), WriteConcern.FsyncSafe)
   }
 
 }

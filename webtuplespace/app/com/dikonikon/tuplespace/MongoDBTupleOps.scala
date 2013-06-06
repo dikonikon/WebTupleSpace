@@ -36,11 +36,11 @@ class MongoDBTupleOps() {
     listOfMatches.map(x => WebTuple(x))
   }
 
-  def createSession(): MongoDBObject = {
+  def createSession(): String = {
     val sessions = database("sessions")
     val sessionObj = MongoDBObject()
     sessions += sessionObj
-    sessionObj
+    sessionObj._id.get.toString
   }
 
   def deleteSession(sessionId: String): Unit = {
@@ -57,9 +57,10 @@ class MongoDBTupleOps() {
     session match {
       case None => throw NoSessionFoundException()
       case Some(x) => {
-        val subscriptions = x.as[MongoDBList]("subscriptions")
+        val subscriptions = (x.getOrElse("subscriptions", new MongoDBList())).asInstanceOf[MongoDBList]
         subscriptions += subscription
         addNotifications(subscription)
+        x += "subscriptions" -> subscriptions
         sessions.update(MongoDBObject("_id" -> x._id), x)
       }
     }
@@ -67,11 +68,12 @@ class MongoDBTupleOps() {
 
   def addNotifications(subscription: MongoDBObject): Unit = {
     val tuples = database("tuples")
-    val cursor = tuples.find(subscription.as[MongoDBObject]("query"))
-    val notifications = subscription.as[MongoDBList]("notifications")
+    val cursor = tuples.find(subscription.as[DBObject]("query"))
+    val notifications = subscription.getAsOrElse[MongoDBList]("notifications", new MongoDBList())
     for (t <- cursor) {
-      if (!notifications.contains(t)) notifications += t
+      if (!notifications.contains(t._id)) notifications += t._id
     }
+    subscription += "notifications" -> notifications
   }
 
   def db = this.database
