@@ -4,7 +4,6 @@ Session:
 {
 	_id: ObjectId(),
 	subscriptions: [Subscription],
-	notifications: [ObjectId]
 }
 
 Subscription:

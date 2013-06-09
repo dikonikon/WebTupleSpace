@@ -13,11 +13,6 @@ class MongoDBTupleOps() {
   private val conf = MongoDBConfig()
   private val database = MongoConnection(conf.host, conf.port)(conf.dbname)
 
-  /**
-   * Happy day scenarios only for now
-   * @param webtuple
-   * @return
-   */
   def createTuple(webtuple: WebTuple): WebTuple = {
     val mongoDbTuple = toMongoTuple(webtuple)
     val tuples = database("tuples")
@@ -66,7 +61,7 @@ class MongoDBTupleOps() {
     }
   }
 
-  def addNotifications(subscription: MongoDBObject): Unit = {
+  private def addNotifications(subscription: MongoDBObject): Unit = {
     val tuples = database("tuples")
     val cursor = tuples.find(subscription.as[DBObject]("query"))
     val notifications = subscription.getAsOrElse[MongoDBList]("notifications", new MongoDBList())
@@ -75,6 +70,38 @@ class MongoDBTupleOps() {
     }
     subscription += "notifications" -> notifications
   }
+
+  def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
+    val sessions = database("sessions")
+    // for each subscription, for each ObjectId in the subscription, create a tuple of the original pattern and
+    // list of matching tuples, if they still exist.
+    val session = sessions.findOne(MongoDBObject("_id" -> new ObjectId(sessionId)))
+    session match {
+      case None => throw NoSessionFoundException()
+      case Some(s) => {
+        val subscriptions = s.getOrElse("subscriptions", None)
+        subscriptions match {
+          case None => List[(WebTuple, List[WebTuple])]()
+          case subs: MongoDBList => {
+            readNotificationsStillExisting(subs)
+          }
+        }
+      }
+    }
+  }
+
+
+
+  private def readNotificationsStillExisting(subscriptions: MongoDBList): List[(WebTuple, List[WebTuple])] = {
+    subscriptions.map((subscription: DBObject) => {
+      val query = subscription("query")
+      val pattern = subscription("pattern")
+      val notifications = subscription("notifications")
+      val results: List[WebTuple] = readTuplesWithIds(notifications)})
+    (pattern, results)
+  }
+
+  private def readTuplesWithIds(value: AnyRef): List[WebTuple]
 
   def db = this.database
 

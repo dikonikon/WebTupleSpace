@@ -38,13 +38,17 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
     deleteSession(sessionId)
   }
 
-  // todo:
   override def subscribe(pattern: WebTuple, sessionId: String): Unit = {
     addSubscription(pattern, sessionId)
   }
 
   override def unsubscribe(subscriptionId: String, sessionId: String): Unit = {
     throw new NotImplementedError()
+  }
+
+  // todo: implement
+  override def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
+    List[(WebTuple, List[WebTuple])]()
   }
 }
 

@@ -9,6 +9,7 @@ trait TupleSpaceServer {
   def endSession(sessionId: String)
   def subscribe(pattern: WebTuple, sessionId: String)
   def unsubscribe(subscriptionId: String, sessionId: String)
+  def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])]
 }
 
 
