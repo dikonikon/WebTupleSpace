@@ -1,6 +1,7 @@
 package com.dikonikon.tuplespace
 
 import com.mongodb.casbah.Imports._
+import scala.collection.mutable.ListBuffer
 
 /**
  * See: https://github.com/dikonikon
@@ -90,18 +91,23 @@ class MongoDBTupleOps() {
     }
   }
 
-
-
   private def readNotificationsStillExisting(subscriptions: MongoDBList): List[(WebTuple, List[WebTuple])] = {
-    subscriptions.map((subscription: DBObject) => {
-      val query = subscription("query")
-      val pattern = subscription("pattern")
-      val notifications = subscription("notifications")
-      val results: List[WebTuple] = readTuplesWithIds(notifications)})
-    (pattern, results)
+    List[(WebTuple, List[WebTuple])]() ++ {for {s <- subscriptions
+      subscription = s.asInstanceOf[MongoDBObject]
+      pattern: WebTuple = subscription.as[WebTuple]("pattern")
+      notifications: List[ObjectId] = subscription.as[List[ObjectId]]("notifications")
+      results: List[WebTuple] = readTuplesWithIds(notifications)
+    } yield (pattern, results)}
   }
 
-  private def readTuplesWithIds(value: AnyRef): List[WebTuple]
+  private def readTuplesWithIds(ids: List[ObjectId]): List[WebTuple] = {
+    val tuples = database("tuples")
+    val query = "_id" $in ids
+    val result = new ListBuffer[WebTuple]()
+    val cursor = tuples.find(query)
+    cursor.foreach(x => result += WebTuple(x))
+    result.toList
+  }
 
   def db = this.database
 
