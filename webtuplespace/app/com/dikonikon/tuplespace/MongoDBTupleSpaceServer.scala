@@ -50,6 +50,16 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
   override def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
     List[(WebTuple, List[WebTuple])]()
   }
+
+  /**
+   * Removes notifications from the Session that have
+   * been previously read
+   * @param sessionId
+   */
+  override def clearNotifications(sessionId: String): Unit = {
+
+  }
+
 }
 
 case class NoSessionFoundException() extends RuntimeException

@@ -42,14 +42,11 @@ class MongoDBTupleOpsComponentSpec extends Specification {
       createTestWebTuples
       val sessionId = createSession()
       addSubscription(testPattern, sessionId)
-      val sessions = db("sessions")
-      val session = (sessions.findOneByID(new ObjectId(sessionId))).getOrElse(throw NoSessionFoundException())
-      val subscriptions = session.get("subscriptions").asInstanceOf[BasicDBList]
-      subscriptions.size must equalTo(1)
-      val subscription = subscriptions.get(0).asInstanceOf[DBObject]     // todo
-      val notifications = subscription.get("notifications").asInstanceOf[BasicDBList]
-      notifications.size must equalTo(1)
+      val notifications = readNotifications(sessionId)
+      notifications.length must equalTo(1)
+      val (pattern, matches) = notifications.head
+      pattern must equalTo(testPattern)
+      cleanTestDB
     }
   }
-
 }

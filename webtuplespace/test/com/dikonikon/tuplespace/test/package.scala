@@ -11,6 +11,11 @@ import com.mongodb.casbah.commons.MongoDBObject
  * Date: 22/05/13
  * Time: 14:54
  */
+
+//////////////////////////////////////////////////
+// Verbs used to do set up and tear down for tests
+//////////////////////////////////////////////////
+
 package object test {
   def createTestWebTuples {
     val webTuple1 = WebTuple(<Tuple>

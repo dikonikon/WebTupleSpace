@@ -13,6 +13,7 @@ import scala.xml.NodeSeq
 import com.mongodb.casbah.commons.MongoDBObject
 import scala.collection.mutable.ListBuffer
 import com.mongodb.BasicDBObject
+import java.util.NoSuchElementException
 
 /**
  * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it take WebTupleSpace.
@@ -40,13 +41,10 @@ import com.mongodb.BasicDBObject
  * significant or preserved, so if it is supported as a payload the ordering will need to be explicitly
  * represented take the data structure.
  */
-trait WebTuple extends {
+trait WebTuple {
   var id: String
   def internal: List[(String, String, Array[Byte])]
-  override def equals(obj: Any): Boolean = {
-    val that = obj.asInstanceOf[WebTuple]
-    that.internal == this.internal
-  }
+
   override def toString = {
     val s = new StringBuilder()
     s.append("(")
@@ -54,6 +52,17 @@ trait WebTuple extends {
       .append(x._3.toString).append(")"))
     s.append(")")
     s.toString()
+  }
+
+  override def equals(other: Any): Boolean = {
+    def contentEqual(x: List[(String, String, _)], y: List[(String, String, _)]): Boolean = {
+      if (x.length == 0) return true
+      if ((x.head._1 == y.head._1) && (x.head._2 == y.head._2)) contentEqual(x.tail, y.tail) else false
+    }
+    if (!other.isInstanceOf[WebTuple]) return false
+    val that = other.asInstanceOf[WebTuple]
+    if (this.internal.length != that.internal.length) return false
+    contentEqual(this.internal, that.internal)
   }
 }
 
@@ -86,7 +95,12 @@ object WebTuple {
       }
       l.toList
     }
-    override var id: String = original._id.get.toString
+    override var id: String = {
+      original._id match {
+        case None => ""
+        case _ => original._id.get.toString
+      }
+    }
   }
 
   def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)

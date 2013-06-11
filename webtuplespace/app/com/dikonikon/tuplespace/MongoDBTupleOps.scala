@@ -83,7 +83,7 @@ class MongoDBTupleOps() {
         val subscriptions = s.getOrElse("subscriptions", None)
         subscriptions match {
           case None => List[(WebTuple, List[WebTuple])]()
-          case subs: MongoDBList => {
+          case subs: BasicDBList => {
             readNotificationsStillExisting(subs)
           }
         }
@@ -93,14 +93,14 @@ class MongoDBTupleOps() {
 
   private def readNotificationsStillExisting(subscriptions: MongoDBList): List[(WebTuple, List[WebTuple])] = {
     List[(WebTuple, List[WebTuple])]() ++ {for {s <- subscriptions
-      subscription = s.asInstanceOf[MongoDBObject]
-      pattern: WebTuple = subscription.as[WebTuple]("pattern")
-      notifications: List[ObjectId] = subscription.as[List[ObjectId]]("notifications")
+      subscription = s.asInstanceOf[BasicDBObject]
+      pattern: WebTuple = WebTuple(subscription.as[BasicDBObject]("pattern"))
+      notifications = subscription.as[MongoDBList]("notifications")
       results: List[WebTuple] = readTuplesWithIds(notifications)
     } yield (pattern, results)}
   }
 
-  private def readTuplesWithIds(ids: List[ObjectId]): List[WebTuple] = {
+  private def readTuplesWithIds(ids: MongoDBList): List[WebTuple] = {
     val tuples = database("tuples")
     val query = "_id" $in ids
     val result = new ListBuffer[WebTuple]()
