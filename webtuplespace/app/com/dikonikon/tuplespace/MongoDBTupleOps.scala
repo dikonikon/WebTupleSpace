@@ -64,13 +64,13 @@ class MongoDBTupleOps() {
 
   private def addNotifications(subscription: MongoDBObject): Unit = {
     val tuples = database("tuples")
-    val cursor = tuples.find(subscription.as[DBObject]("query"))
-    val notifications = subscription.getAsOrElse[MongoDBList]("notifications", new MongoDBList())
+    val query = toMongoQuery(subscription.as[DBObject]("pattern"))
+    val cursor = tuples.find(query)
+    val notifications = subscription.as[MongoDBList]("notifications")
     for (t <- cursor) {
       if (!notifications.contains(t._id)) notifications += t._id
     }
     subscription += "notifications" -> notifications
-    subscription += "notificationHistory" -> new MongoDBList()
   }
 
   def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
@@ -86,7 +86,7 @@ class MongoDBTupleOps() {
           case None => List[(WebTuple, List[WebTuple])]()
           case subs: BasicDBList => {
             val result = readNotificationsStillExisting(subs)
-            sessions.update(MongoDBObject("_id" -> new ObjectId(sessionId)), session)
+            sessions.update(MongoDBObject("_id" -> new ObjectId(sessionId)), s)
             result
           }
         }
@@ -95,15 +95,16 @@ class MongoDBTupleOps() {
   }
 
   private def readNotificationsStillExisting(subscriptions: MongoDBList): List[(WebTuple, List[WebTuple])] = {
-    List[(WebTuple, List[WebTuple])]() ++ {for {s <- subscriptions
-      subscription = s.asInstanceOf[BasicDBObject]
-      pattern: WebTuple = WebTuple(subscription.as[BasicDBObject]("pattern"))
-      notifications = subscription.as[MongoDBList]("notifications")
-      notificationHistory = subscription.as[MongoDBList]("notificationHistory")
+    List[(WebTuple, List[WebTuple])]() ++ subscriptions.map((s) => {
+      val subscription = s.asInstanceOf[BasicDBObject]
+      val pattern: WebTuple = WebTuple(subscription.as[BasicDBObject]("pattern"))
+      val notifications = subscription.as[MongoDBList]("notifications")
+      val notificationHistory = subscription.as[MongoDBList]("notificationHistory")
       notificationHistory += notifications
-      results: List[WebTuple] = readTuplesWithIds(notifications)
+      val results: List[WebTuple] = readTuplesWithIds(notifications)
       notifications.clear
-    } yield (pattern, results)}
+      (pattern, results)
+    })
   }
 
   private def readTuplesWithIds(ids: MongoDBList): List[WebTuple] = {
@@ -126,7 +127,7 @@ class MongoDBTupleOps() {
    * @param webtuple
    * @return
    */
-  private def toMongoTuple(webtuple: WebTuple): MongoDBObject = {
+  private def toMongoTuple(webtuple: WebTuple, isPattern: Boolean = false): MongoDBObject = {
     var i = 1
     val tupleObj = MongoDBObject()
     val shardHashTarget = Array[Byte]()
@@ -137,23 +138,33 @@ class MongoDBTupleOps() {
       i = i + 1
       shardHashTarget ++ e._3
     }
-    tupleObj += "shardKey" -> toHash(shardHashTarget)
+    if (!isPattern) tupleObj += "shardKey" -> toHash(shardHashTarget)
+    tupleObj
   }
 
   private def toMongoQuery(pattern: WebTuple): MongoDBObject = {
     val builder = MongoDBObject.newBuilder
-    var i = 1
-    for (e <- pattern.internal) {
-      builder += ("e" + i + ".hash" -> e._3)
-      i += 1
+    for (i <- 1 to pattern.internal.size) {
+      builder += ("e" + i + ".hash" -> pattern.internal(i - 1)._3)
+    }
+    builder.result()
+  }
+
+  private def toMongoQuery(pattern: DBObject): MongoDBObject = {
+    val builder = MongoDBObject.newBuilder
+
+    for (i <- 1 to pattern.size) {
+      val key = "e" + i
+      builder += (key + ".hash" -> pattern(key))
     }
     builder.result()
   }
 
   private def toSubscription(pattern: WebTuple): MongoDBObject = {
-    val query = toMongoQuery(pattern)
-    val mongoPattern = toMongoTuple(pattern)
-    MongoDBObject("query" -> query, "pattern" -> mongoPattern)
+    val mongoPattern = toMongoTuple(pattern, isPattern = true)
+    val sub = MongoDBObject("pattern" -> mongoPattern)
+    sub += "notifications" -> new MongoDBList()
+    sub += "notificationHistory" -> new MongoDBList()
   }
 
 }
