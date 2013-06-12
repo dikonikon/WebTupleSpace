@@ -18,19 +18,27 @@ import com.mongodb.casbah.commons.MongoDBObject
 
 package object test {
   def createTestWebTuples {
-    val webTuple1 = WebTuple(<Tuple>
-      <Element><Type>String</Type><Value>avalue1</Value></Element>
-      <Element><Type>Int</Type><Value>AES</Value></Element>
-    </Tuple>)
-    val webTuple2 = WebTuple(<Tuple>
-      <Element><Type>String</Type><Value>avalue2</Value></Element>
-      <Element><Type>Int</Type><Value>IBM</Value></Element>
-    </Tuple>)
-    createTuple(webTuple1)
-    createTuple(webTuple2)
+    createTuple(testTuples._1)
+    createTuple(testTuples._2)
   }
 
-  def testPattern = WebTuple(<Tuple><Element><Type>String</Type><Value>avalue1</Value></Element></Tuple>)
+  val testPattern = WebTuple(<Tuple><Element><Type>String</Type><Value>avalue1</Value></Element></Tuple>)
+
+  val testTuples = (WebTuple(<Tuple>
+    <Element><Type>String</Type><Value>avalue1</Value></Element>
+    <Element><Type>Int</Type><Value>AES</Value></Element>
+  </Tuple>), WebTuple(<Tuple>
+    <Element><Type>String</Type><Value>avalue2</Value></Element>
+    <Element><Type>Int</Type><Value>IBM</Value></Element>
+  </Tuple>))
+
+  val testEquivalentTuples = (WebTuple(<Tuple>
+    <Element><Type>String</Type><Value>avalue1</Value></Element>
+    <Element><Type>Int</Type><Value>AES</Value></Element>
+  </Tuple>), WebTuple(<Tuple>
+    <Element><Type>String</Type><Value>avalue2</Value></Element>
+    <Element><Type>Int</Type><Value>IBM</Value></Element>
+  </Tuple>))
 
   def cleanTestDB {
     val tuples = db("tuples")

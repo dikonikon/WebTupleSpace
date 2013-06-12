@@ -70,6 +70,7 @@ class MongoDBTupleOps() {
       if (!notifications.contains(t._id)) notifications += t._id
     }
     subscription += "notifications" -> notifications
+    subscription += "notificationHistory" -> new MongoDBList()
   }
 
   def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
@@ -84,7 +85,9 @@ class MongoDBTupleOps() {
         subscriptions match {
           case None => List[(WebTuple, List[WebTuple])]()
           case subs: BasicDBList => {
-            readNotificationsStillExisting(subs)
+            val result = readNotificationsStillExisting(subs)
+            sessions.update(MongoDBObject("_id" -> new ObjectId(sessionId)), session)
+            result
           }
         }
       }
@@ -96,7 +99,10 @@ class MongoDBTupleOps() {
       subscription = s.asInstanceOf[BasicDBObject]
       pattern: WebTuple = WebTuple(subscription.as[BasicDBObject]("pattern"))
       notifications = subscription.as[MongoDBList]("notifications")
+      notificationHistory = subscription.as[MongoDBList]("notificationHistory")
+      notificationHistory += notifications
       results: List[WebTuple] = readTuplesWithIds(notifications)
+      notifications.clear
     } yield (pattern, results)}
   }
 

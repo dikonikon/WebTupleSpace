@@ -60,4 +60,15 @@ As the name implies WebTupleSpace is intended to be used over a WAN or internet,
 
 In this way it is possible to configure a tuplespace that is reliable simply by starting clusters of WebTupleSpace Play server instances, and by utilising MongoDB's clustering features. It can be scaled horizontally simply by adding more WebTupleSpace and mongod processes.
 
+## Reliability of Notifications
+
+WebTupleSpace aims to operate in a stateless, connectionless mode, often in an unreliable networking environment such as a WAN or the internet. It is therefore possible for a request for notifications to complete the transaction used to retrieve them from MongoDB and subsequently to fail to successfully transmit them to the client.
+
+WebTupleSpace therefore supports a strategy that allows the client to ensure that notifications are not lost, by employing a notification history that is updated in the same transaction context as updating the notification list. A transaction in MongoDB is any one read or update on a single collection.
+
+The notification history is the list of notifications that TupleSpaceServer thinks it has sent to the client as a result of a call to readNotifications. Since it is possible for the read transaction to succeed and the notifications still to fail to get to the client, the following strategy is employed:
+- when notifications are read and returned to the client they are, as part of that transaction, appended to the notification history.
+- if the client experiences a system or communications failure during a read, it can read both the notifications again and the notification history. If this fails again the notification history may be re-read as many times as necessary - it is never deleted until the client calls clearNotificationHistory.
+- once a call to readNotificationHistory succeeds the client can call clearNotificationHistory to remove it. In this way it is possible that notifications will be received more than once - for example if readNotifications succeeds and readNotificationHistory is subsequently called, but, subject to the transactional integrity of the MongoDB server, notifications should not be lost.
+
 

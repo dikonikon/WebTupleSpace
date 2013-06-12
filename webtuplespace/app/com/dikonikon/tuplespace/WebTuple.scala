@@ -13,7 +13,6 @@ import scala.xml.NodeSeq
 import com.mongodb.casbah.commons.MongoDBObject
 import scala.collection.mutable.ListBuffer
 import com.mongodb.BasicDBObject
-import java.util.NoSuchElementException
 
 /**
  * WebTuple transforms a variety of forms of inputs into the form required to com.dikonikon.tuplespace.store it take WebTupleSpace.

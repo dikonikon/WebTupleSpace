@@ -10,7 +10,8 @@ trait TupleSpaceServer {
   def subscribe(pattern: WebTuple, sessionId: String)
   def unsubscribe(subscriptionId: String, sessionId: String)
   def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])]
-  def clearNotifications(sessionId: String)
+  def readNotificationHistory(sessionId: String): List[(WebTuple,  List[WebTuple])]
+  def clearNotificationHistory(sessionId: String)
 }
 
 

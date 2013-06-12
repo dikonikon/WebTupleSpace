@@ -26,4 +26,9 @@ class WebTupleUnitSpec extends Specification {
     }
   }
 
+  "given two WebTuples with the same type and values" should {
+    "comparing them using equals is true" in {
+      testTuples._1.equals(testEquivalentTuples._1) must equalTo(true)
+    }
+  }
 }
