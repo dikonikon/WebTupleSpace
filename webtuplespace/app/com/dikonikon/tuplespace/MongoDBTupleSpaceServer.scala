@@ -47,28 +47,28 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
   }
 
   // todo: implement
-  override def readNotifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
-    List[(WebTuple, List[WebTuple])]()
+  override def notifications(sessionId: String): List[(WebTuple, List[WebTuple])] = {
+    readNotifications(sessionId)
   }
 
   /**
    * The notification history is the list of notifications that TupleSpaceServer thinks it has sent to the
-   * client as a result of a call to readNotifications. Since it is possible for the read transaction to succeed
+   * client as a result of a call to notifications. Since it is possible for the read transaction to succeed
    * and the notifications still to fail to get to the client, the following strategy is employed:
    * - when notifications are read and returned to the client they are, as part of that transaction,
    * appended to the notification history.
    * - if the client experiences a system or communications failure during a read, it can read both the notifications
    * again and the notification history. If this fails again the notification history may be re-read as many times
    * as necessary - it is never deleted until the client calls clearNotificationHistory.
-   * - once a call to readNotificationHistory succeeds the client can call clearNotificationHistory to remove it.
-   * In this way it is possible that notifications will be received more than once - for example if readNotifications
-   * succeeds and readNotificationHistory is subsequently called, but, subject to the transactional integrity of
+   * - once a call to notificationHistory succeeds the client can call clearNotificationHistory to remove it.
+   * In this way it is possible that notifications will be received more than once - for example if notifications
+   * succeeds and notificationHistory is subsequently called, but, subject to the transactional integrity of
    * the MongoDB server, notifications should not be lost.
    * @param sessionId
    * @return
    */
-  override def readNotificationHistory(sessionId: String): List[(WebTuple,  List[WebTuple])] = {
-    List[(WebTuple, List[WebTuple])]()
+  override def notificationHistory(sessionId: String): List[(WebTuple,  List[WebTuple])] = {
+    readNotificationHistory(sessionId)
   }
 
   /**
@@ -76,8 +76,8 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
    * been previously read
    * @param sessionId
    */
-  override def clearNotificationHistory(sessionId: String): Unit = {
-
+  override def notificationsReceived(sessionId: String): Unit = {
+    clearNotificationHistory(sessionId)
   }
 
 }

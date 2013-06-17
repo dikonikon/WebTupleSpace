@@ -19,4 +19,6 @@ package object tuplespace {
 
   }
 
+  object Server extends MongoDBTupleSpaceServer
+
 }
