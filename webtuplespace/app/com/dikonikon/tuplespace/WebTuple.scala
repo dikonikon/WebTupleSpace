@@ -9,7 +9,7 @@
 package com.dikonikon.tuplespace
 
 
-import scala.xml.NodeSeq
+import scala.xml.{Elem, NodeSeq}
 import com.mongodb.casbah.commons.MongoDBObject
 import scala.collection.mutable.ListBuffer
 import com.mongodb.BasicDBObject
@@ -51,6 +51,19 @@ trait WebTuple {
       .append(x._3.toString).append(")"))
     s.append(")")
     s.toString()
+  }
+
+  def toXML: Elem = {
+    <Tuple>
+      <Id>{this.id}</Id>
+      {
+        this.internal.map(x =>
+          <Field>
+            <Type>{x._1}</Type>
+            <Value>{x._2}</Value>
+          </Field>)
+      }
+    </Tuple>
   }
 
   override def equals(other: Any): Boolean = {

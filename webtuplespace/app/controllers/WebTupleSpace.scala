@@ -8,6 +8,7 @@ import com.dikonikon.tuplespace.Server
 
 
 // todo: write interceptor to catch any exceptions and display 500 message
+// todo: partially done: interceptor wraps as html, want an xml restful style response
 
 object WebTupleSpace extends Controller {
   /**
@@ -23,9 +24,18 @@ object WebTupleSpace extends Controller {
     }
   }
 
-  def read = Action {
+  def read = Action(parse.xml) {
     request => {
-      Ok("not implemented").as("application/xml")
+      val tupleDoc = request.body
+      Logger.debug("request body: " + request.body.toString)
+      val wsTuple = WebTuple(tupleDoc)
+      val result = Server.read(wsTuple)
+      val response =
+        <Response>
+          <Status>Success</Status>
+          {result.map(x => x.toXML)}
+        </Response>
+      Ok(response).as("text/xml")
     }
   }
 
@@ -38,8 +48,7 @@ object WebTupleSpace extends Controller {
       val response =
         <Response>
           <Status>Success</Status>
-          <Id>{tupleResult.id}</Id>
-          <Tuple>{tupleResult.toString}</Tuple>
+          {tupleResult.toXML}
         </Response>
       Ok(response).as("text/xml")
     }
