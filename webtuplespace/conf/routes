@@ -6,6 +6,8 @@
 
 PUT     /webtuplespace/write                           controllers.WebTupleSpace.write
 
+PUT     /webtuplespace/read                            controllers.WebTupleSpace.read
+
 # Home page
 GET     /                           controllers.Application.index
 

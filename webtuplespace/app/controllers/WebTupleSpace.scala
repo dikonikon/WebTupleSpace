@@ -27,7 +27,7 @@ object WebTupleSpace extends Controller {
   def read = Action(parse.xml) {
     request => {
       val tupleDoc = request.body
-      Logger.debug("request body: " + request.body.toString)
+      Logger.debug("read request body: " + request.body.toString)
       val wsTuple = WebTuple(tupleDoc)
       val result = Server.read(wsTuple)
       val response =
@@ -35,6 +35,7 @@ object WebTupleSpace extends Controller {
           <Status>Success</Status>
           {result.map(x => x.toXML)}
         </Response>
+      Logger.debug("read response: " + response.toString)
       Ok(response).as("text/xml")
     }
   }
@@ -42,7 +43,7 @@ object WebTupleSpace extends Controller {
   def write = Action(parse.xml) {
     request => {
       val tupleDoc = request.body
-      Logger.debug("request body: " + request.body.toString)
+      Logger.debug("write request body: " + request.body.toString)
       val wsTuple = WebTuple(tupleDoc)
       val tupleResult = Server.write(wsTuple)
       val response =
@@ -50,6 +51,7 @@ object WebTupleSpace extends Controller {
           <Status>Success</Status>
           {tupleResult.toXML}
         </Response>
+      Logger.debug("write response: " + response.toString)
       Ok(response).as("text/xml")
     }
   }
