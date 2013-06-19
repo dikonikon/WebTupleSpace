@@ -19,9 +19,18 @@ class MongoDBTupleSpaceServer() extends TupleSpaceServer {
 
   import MongoDBTupleOps._
 
+  /**
+   * note as a side effect can add a notification to a matching session->subscription. This is done close to
+   * but not in the same transaction as the write - it can't really because the operations work on separate
+   * collections.
+   * To ensure that notifications cannot be lost there is a todo: run a periodic matching process that ensures that
+   * any recent writes have authored notifications.
+   * @param tuple
+   * @return
+   */
   override def write(tuple: WebTuple): WebTuple = {
     createTuple(tuple)
-    // todo: does this now trigger a subscription?
+    //
   }
 
   override def read(pattern: WebTuple): List[WebTuple] = {
