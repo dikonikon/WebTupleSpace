@@ -40,6 +40,14 @@ package object test {
     <Element><Type>Int</Type><Value>IBM</Value></Element>
   </Tuple>))
 
+  val similarTestTuples = (WebTuple(<Tuple>
+    <Element><Type>String</Type><Value>avalue1</Value></Element>
+    <Element><Type>Int</Type><Value>AES</Value></Element>
+  </Tuple>), WebTuple(<Tuple>
+    <Element><Type>String</Type><Value>avalue1</Value></Element>
+    <Element><Type>Int</Type><Value>IBM</Value></Element>
+  </Tuple>))
+
   def cleanTestDB {
     val tuples = db("tuples")
     val sessions = db("sessions")

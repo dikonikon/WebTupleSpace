@@ -20,21 +20,20 @@ object WebTupleSpace extends Controller {
       val tupleDoc = request.body.asXml
       val wsTuple = WebTuple(tupleDoc.get)
 
-      Ok("working on it!").as("application/xml")
+      Ok("working on it!").as("text/xml")
     }
   }
 
   def read = Action(parse.xml) {
     request => {
       val tupleDoc = request.body
-      Logger.debug("read request body: " + request.body.toString)
+      Logger.debug("read request body: " + tupleDoc.toString)
       val wsTuple = WebTuple(tupleDoc)
       val result = Server.read(wsTuple)
       val response =
-        <Response>
-          <Status>Success</Status>
+        <Tuples>
           {result.map(x => x.toXML)}
-        </Response>
+        </Tuples>
       Logger.debug("read response: " + response.toString)
       Ok(response).as("text/xml")
     }
@@ -43,14 +42,10 @@ object WebTupleSpace extends Controller {
   def write = Action(parse.xml) {
     request => {
       val tupleDoc = request.body
-      Logger.debug("write request body: " + request.body.toString)
+      Logger.debug("write request body: " + tupleDoc.toString)
       val wsTuple = WebTuple(tupleDoc)
       val tupleResult = Server.write(wsTuple)
-      val response =
-        <Response>
-          <Status>Success</Status>
-          {tupleResult.toXML}
-        </Response>
+      val response = tupleResult.toXML
       Logger.debug("write response: " + response.toString)
       Ok(response).as("text/xml")
     }
@@ -58,43 +53,66 @@ object WebTupleSpace extends Controller {
 
   def startSession = Action {
     request => {
-      Ok("not implemented").as("application/xml")
+      Logger.debug("start session received ")
+      val sessionId = Server.startSession()
+      val response =
+          <SessionId>{sessionId}</SessionId>
+      Logger.debug("response is: " + response.toString)
+      Ok(response).as("text/xml")
     }
   }
 
   def endSession = Action {
     request => {
-      Ok("not implemented").as("application/xml")
+      Ok("not implemented").as("text/xml")
     }
   }
 
-  def subscribe = Action {
+  def subscribe(sessionId: String) = Action(parse.xml) {
     request => {
-      Ok("not implemented").as("application/xml")
+      val tupleDoc = request.body
+      Logger.debug("subscribe request received for: " + sessionId)
+      Logger.debug("subscribe request body: " + tupleDoc.toString)
+      val wsTuple = WebTuple(tupleDoc)
+      Server.subscribe(wsTuple, sessionId)
+      Ok
     }
   }
 
   def unsubscribe = Action {
     request => {
-      Ok("not implemented").as("application/xml")
+      Ok("not implemented").as("text/xml")
     }
   }
 
-  def notifications = Action {
+  def notifications(sessionId: String) = Action {
     request => {
-      Ok("not implemented").as("application/xml")
+      Logger.debug("notifications request received for session: " + sessionId)
+      val notifications = Server.notifications(sessionId)
+      val response =
+        <NotificationsSet>
+          {notifications.map(x =>
+            <Notifications>
+              <Subscription>
+                {x._1.toXML}
+              </Subscription>
+                {x._2.map(y => y.toXML)}
+            </Notifications>)}
+        </NotificationsSet>
+      Logger.debug("notifications response is: " + response.toString)
+      Ok(response).as("text/xml")
     }
   }
 
   def notificationHistory = Action {
     request => {
-      Ok("not implemented").as("application/xml")
+      Ok("not implemented").as("text/xml")
     }
   }
 
   def notificationsReceived = Action {
     request => {
-      Ok("not implemented").as("application/xml")
+      Ok("not implemented").as("text/xml")
     }
   }
 
