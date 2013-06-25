@@ -74,7 +74,7 @@ class WebTupleSpaceWebServiceSpec extends Specification {
       |two notifications should be returned to the client
       |and after they have been returned there should be no
       |current notifications and two notifications in history
-    """.stripMargin in {
+    """ in {
       running(FakeApplication()) {
         cleanTestDB
         // add two tuples to db
@@ -106,7 +106,7 @@ class WebTupleSpaceWebServiceSpec extends Specification {
 
         // add a subscription
         val addSubscriptionRequest = FakeRequest(PUT, "/webtuplespace/subscribe/session/" + sessionId).
-          withXmlBody(<Tuple><Element></Element></Tuple>).
+          withXmlBody(<Element><Type>String</Type><Value>avalue1</Value></Element>).
           withHeaders(("Content-Type", "text/xml"))
         val addSubscriptionResponse = route(addSubscriptionRequest).get
         status(addSubscriptionResponse) must equalTo(OK)
@@ -118,7 +118,8 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         val notificationsContent = contentAsString(getNotifsResponse)
         val xmlNotificationsContent = XML.loadString(notificationsContent)
         (xmlNotificationsContent \\ "Notifications").length must equalTo(1)
-        cleanTestDB
+        (xmlNotificationsContent \\ "Tuples").length must equalTo(3) // the subscription plus two notifications
+        //cleanTestDB
       }
     }
   }
