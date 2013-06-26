@@ -154,9 +154,9 @@ class MongoDBTupleOps extends MongoDBConstants {
       val pattern: WebTuple = WebTuple(subscription.as[BasicDBObject](_pattern))
       val notifications = subscription.as[MongoDBList](_notifications)
       val notificationHistory = subscription.as[MongoDBList](_notificationHistory)
-      notificationHistory += notifications
       val results: List[WebTuple] = readTuplesWithIds(notifications)
       notifications.clear
+      results.foreach(t => {notificationHistory += new ObjectId(t.id)})
       (pattern, results)
     })
   }
@@ -209,7 +209,8 @@ class MongoDBTupleOps extends MongoDBConstants {
 
     for (i <- 1 to pattern.size) {
       val key = _e + i
-      builder += (key + _dothash -> pattern(key))
+      val value: Array[Byte] = (pattern.as[DBObject](key)).as[Array[Byte]]("hash")
+      builder += (key + _dothash -> value)
     }
     builder.result()
   }

@@ -8,7 +8,6 @@
  * Time: 13:40
  */
 
-import play.api.{Logger, GlobalSettings, Application}
 
 import play.api._
 import play.api.mvc._
@@ -24,6 +23,7 @@ object Global extends GlobalSettings {
     Logger.info("WebTupleSpaceServer shutting down...")
   }
 
+  // todo: this shouldn't be a web page - look into what this response should be, other than 500
   override def onError(request: RequestHeader, ex: Throwable) = {
     InternalServerError(
       views.html.errorpage(ex)

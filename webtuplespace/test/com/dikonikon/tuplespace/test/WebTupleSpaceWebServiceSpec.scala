@@ -117,8 +117,23 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         status(getNotifsResponse) must equalTo(OK)
         val notificationsContent = contentAsString(getNotifsResponse)
         val xmlNotificationsContent = XML.loadString(notificationsContent)
+        (xmlNotificationsContent \\ "NotificationsSet").length must equalTo(1)
         (xmlNotificationsContent \\ "Notifications").length must equalTo(1)
-        (xmlNotificationsContent \\ "Tuples").length must equalTo(3) // the subscription plus two notifications
+        (xmlNotificationsContent \\ "Subscription").length must equalTo(1)
+        (xmlNotificationsContent \\ "Tuple").length must equalTo(3) // the subscription plus two notifications
+
+        // get notifications again - should be empty now - notifications should have been moved to history
+        val secondNotifsRequest = FakeRequest(GET, "/webtuplespace/notifications/session/" + sessionId)
+        val secondNotifsResponse = route(secondNotifsRequest).get
+        status(secondNotifsResponse) must equalTo(OK)
+        val secondNotsContent = contentAsString(secondNotifsResponse)
+        val secondXmlNotifs = XML.loadString(secondNotsContent)
+        (secondXmlNotifs \\ "NotificationsSet").length must equalTo(1)
+        (secondXmlNotifs \\ "Notifications").length must equalTo(1)
+        (secondXmlNotifs \\ "Subscription").length must equalTo(1)
+        (secondXmlNotifs \\ "Tuple").length must equalTo(1) // just the subscription
+
+        // todo: test for notification history
         //cleanTestDB
       }
     }
