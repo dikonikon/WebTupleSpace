@@ -131,7 +131,7 @@ class MongoDBTupleOps extends MongoDBConstants {
     List[(WebTuple, List[WebTuple])]() ++ subscriptions.map(s => {
       val sub = s.asInstanceOf[DBObject]
       val pattern = WebTuple(sub.as[DBObject](_pattern))
-      val notifications = sub.as[BasicDBList](_notificationHistory)
+      val notifications = sub.as[MongoDBList](_notificationHistory)
       val results = readTuplesWithIds(notifications)
       (pattern, results)
     })
@@ -168,6 +168,11 @@ class MongoDBTupleOps extends MongoDBConstants {
     val cursor = tuples.find(query)
     cursor.foreach(x => result += WebTuple(x))
     result.toList
+  }
+
+  private def createTuplesIdsOnly(ids: MongoDBList): List[WebTuple] = {
+    List[WebTuple]() ++
+      ids.map(x => WebTuple(x.asInstanceOf[ObjectId].toString))
   }
 
   def db = this.database

@@ -89,30 +89,40 @@ object WebTupleSpace extends Controller {
     request => {
       Logger.debug("notifications request received for session: " + sessionId)
       val notifications = Server.notifications(sessionId)
-      val response =
-        <NotificationsSet>
-          {notifications.map(x =>
-            <Notifications>
-              <Subscription>
-                {x._1.toXML}
-              </Subscription>
-                {x._2.map(y => y.toXML)}
-            </Notifications>)}
-        </NotificationsSet>
+      val response = toXML(notifications)
       Logger.debug("notifications response is: " + response.toString)
       Ok(response).as("text/xml")
     }
   }
 
-  def notificationHistory = Action {
+  def notificationHistory(sessionId: String) = Action {
     request => {
-      Ok("not implemented").as("text/xml")
+      Logger.debug("notifications history request received for session: " + sessionId)
+      val history = Server.notificationHistory(sessionId)
+      val response = toXML(history)
+      Logger.debug("notifications history response is: " + response.toString)
+      Ok(response).as("text/xml")
     }
   }
 
-  def notificationsReceived = Action {
+  private def toXML(list: List[(WebTuple, List[WebTuple])]) =
+
+      <NotificationsSet>
+        {list.map(x =>
+          <Notifications>
+            <Subscription>
+              {x._1.toXML}
+            </Subscription>
+            {x._2.map(y => y.toXML)}
+          </Notifications>)}
+      </NotificationsSet>
+
+  def notificationsReceived(sessionId: String) = Action {
     request => {
-      Ok("not implemented").as("text/xml")
+      Logger.debug("notifications received request received for session: " + sessionId)
+      Server.notificationsReceived(sessionId)
+      Logger.debug("successfully cleared notification history for session: " + sessionId)
+      Ok
     }
   }
 

@@ -4,15 +4,19 @@
 
 # webtuplespace
 
-PUT     /webtuplespace/write                           controllers.WebTupleSpace.write
+PUT     /webtuplespace/write                             controllers.WebTupleSpace.write
 
-PUT     /webtuplespace/read                            controllers.WebTupleSpace.read
+PUT     /webtuplespace/read                              controllers.WebTupleSpace.read
 
-GET     /webtuplespace/start                           controllers.WebTupleSpace.startSession
+GET     /webtuplespace/start                             controllers.WebTupleSpace.startSession
 
-PUT     /webtuplespace/subscribe/session/*id                       controllers.WebTupleSpace.subscribe(id)
+PUT     /webtuplespace/subscribe/session/*id             controllers.WebTupleSpace.subscribe(id)
 
-GET     /webtuplespace/notifications/session/*id                       controllers.WebTupleSpace.notifications(id)
+GET     /webtuplespace/notifications/session/*id         controllers.WebTupleSpace.notifications(id)
+
+GET     /webtuplespace/notificationhistory/session/*id   controllers.WebTupleSpace.notificationHistory(id)
+
+GET     /webtuplespace/notificationsreceived/session/*id controllers.WebTupleSpace.notificationsReceived(id)
 
 # Home page
 GET     /                           controllers.Application.index

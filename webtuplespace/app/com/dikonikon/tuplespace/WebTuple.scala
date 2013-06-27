@@ -117,4 +117,5 @@ object WebTuple {
 
   def apply(tuple: NodeSeq): WebTuple = new XMLWebTuple(tuple)
   def apply(tuple: MongoDBObject): WebTuple = new MongoDBObjectWebTuple(tuple)
+  def apply(id: String) = new XMLWebTuple(<Tuple></Tuple>, id)
 }

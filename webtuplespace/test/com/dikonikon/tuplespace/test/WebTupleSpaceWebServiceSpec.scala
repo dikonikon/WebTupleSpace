@@ -73,7 +73,9 @@ class WebTupleSpaceWebServiceSpec extends Specification {
       |and a session and subscription that matches them both
       |two notifications should be returned to the client
       |and after they have been returned there should be no
-      |current notifications and two notifications in history
+      |current notifications and two notifications in history.
+      |After sending notificationsreceived the notification
+      |history should be empty.
     """ in {
       running(FakeApplication()) {
         cleanTestDB
@@ -133,7 +135,29 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         (secondXmlNotifs \\ "Subscription").length must equalTo(1)
         (secondXmlNotifs \\ "Tuple").length must equalTo(1) // just the subscription
 
-        // todo: test for notification history
+        // test for notification history
+        val notificationHistoryRequest = FakeRequest(GET, "/webtuplespace/notificationhistory/session/" + sessionId)
+        val notificationHistoryResponse = route(notificationHistoryRequest).get
+        status(notificationHistoryResponse) must equalTo(OK)
+        val histContent = contentAsString(notificationHistoryResponse)
+        val xmlHistory = XML.loadString(histContent)
+        (xmlHistory \\ "NotificationsSet").length must equalTo(1)
+        (xmlHistory \\ "Notifications").length must equalTo(1)
+        (xmlHistory \\ "Subscription").length must equalTo(1)
+        (xmlHistory \\ "Tuple").length must equalTo(3) // the pattern and the two historical matches
+
+        // send notificationsreceived then check history is empty
+        val notifsReceivedRequest = FakeRequest(GET, "/webtuplespace/notificationsreceived/session/" + sessionId)
+        val notifsReceivedResponse = route(notifsReceivedRequest).get
+        status(notifsReceivedResponse) must equalTo(OK)
+        val secondNotificationHistoryResponse = route(notificationHistoryRequest).get
+        status(secondNotificationHistoryResponse) must equalTo(OK)
+        val emptyHistContent = contentAsString(secondNotificationHistoryResponse)
+        val xmlEmptyHistCont = XML.loadString(emptyHistContent)
+        (xmlEmptyHistCont \\ "NotificationsSet").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Notifications").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Subscription").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Tuple").length must equalTo(1)
         //cleanTestDB
       }
     }
