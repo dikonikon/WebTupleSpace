@@ -24,7 +24,7 @@ class WebTupleSpaceWebServiceSpec extends Specification {
     "when sent a valid Tuple, with objectid defined return a success response" in {
       running(FakeApplication()) {
         cleanTestDB
-        val request = FakeRequest(PUT, "/webtuplespace/write").
+        val request = FakeRequest(POST, "/webtuplespace/write").
           withXmlBody(<Tuple><Element><Type>String</Type> <Value>aldjsflajlajs</Value></Element></Tuple>).
           withHeaders(("Content-Type", "text/xml"))
         val response = route(request).get
@@ -41,7 +41,7 @@ class WebTupleSpaceWebServiceSpec extends Specification {
       |the same two tuples should be returned""" in {
       running(FakeApplication()) {
         cleanTestDB
-        val request = FakeRequest(PUT, "/webtuplespace/write").
+        val request = FakeRequest(POST, "/webtuplespace/write").
           withXmlBody(<Tuple><Element><Type>String</Type> <Value>aldjsflajlajs</Value></Element></Tuple>).
           withHeaders(("Content-Type", "text/xml"))
         // add once
@@ -52,7 +52,7 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         status(response) must equalTo(OK)
 
         // request using matching pattern
-        val readRequest = FakeRequest(PUT, "/webtuplespace/read").
+        val readRequest = FakeRequest(POST, "/webtuplespace/read").
           withXmlBody(<Tuple><Element><Type>String</Type> <Value>aldjsflajlajs</Value></Element></Tuple>).
           withHeaders(("Content-Type", "text/xml"))
         val readResponse = route(readRequest).get
@@ -79,24 +79,8 @@ class WebTupleSpaceWebServiceSpec extends Specification {
     """ in {
       running(FakeApplication()) {
         cleanTestDB
-        // add two tuples to db
-        val tupleWriteRequest1 = FakeRequest(PUT, "/webtuplespace/write").
-          withXmlBody(<Tuple>
-          <Element><Type>String</Type><Value>avalue1</Value></Element>
-          <Element><Type>Int</Type><Value>AES</Value></Element>
-        </Tuple>).
-          withHeaders(("Content-Type", "text/xml"))
-        val tupleWriteResponse1 = route(tupleWriteRequest1).get
-        status(tupleWriteResponse1) must equalTo(OK)
 
-        val tupleWriteRequest2 = FakeRequest(PUT, "/webtuplespace/write").
-          withXmlBody(<Tuple>
-          <Element><Type>String</Type><Value>avalue1</Value></Element>
-          <Element><Type>Int</Type><Value>IBM</Value></Element>
-        </Tuple>).
-          withHeaders(("Content-Type", "text/xml"))
-        val tupleWriteResponse2 = route(tupleWriteRequest2).get
-        status(tupleWriteResponse2) must equalTo(OK)
+        addTwoTuples
 
         // start a session
         val sessionStartRequest = FakeRequest(GET, "/webtuplespace/start")
@@ -107,7 +91,7 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         sessionId must beAnInstanceOf[String]
 
         // add a subscription
-        val addSubscriptionRequest = FakeRequest(PUT, "/webtuplespace/subscribe/session/" + sessionId).
+        val addSubscriptionRequest = FakeRequest(POST, "/webtuplespace/subscribe/session/" + sessionId).
           withXmlBody(<Element><Type>String</Type><Value>avalue1</Value></Element>).
           withHeaders(("Content-Type", "text/xml"))
         val addSubscriptionResponse = route(addSubscriptionRequest).get
@@ -158,8 +142,60 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         (xmlEmptyHistCont \\ "Notifications").length must equalTo(1)
         (xmlEmptyHistCont \\ "Subscription").length must equalTo(1)
         (xmlEmptyHistCont \\ "Tuple").length must equalTo(1)
-        //cleanTestDB
+        cleanTestDB
       }
     }
+
+    """given two tuples in the db, when a take
+      |request is sent with a matching pattern the two tuples are returned,
+      |and then a subsequent read using the same pattern will return
+      |no tuples
+    """ in {
+      running(FakeApplication()) {
+        cleanTestDB
+        addTwoTuples
+        // send take request
+        val takeRequest = FakeRequest(POST, "/webtuplespace/take").
+          withXmlBody(<Tuple><Element><Type>String</Type><Value>avalue1</Value></Element></Tuple>).
+          withHeaders(("Content-Type", "text/xml"))
+        val takeResponse = route(takeRequest).get
+        status(takeResponse) must equalTo(OK)
+        val takeContent = contentAsString(takeResponse)
+        val xmlTakeContent = XML.loadString(takeContent)
+        (xmlTakeContent \\ "Tuples").length must equalTo(1)
+        (xmlTakeContent \\ "Tuple").length must equalTo(2)
+
+        // read with same tuple
+        val finalReadRequest = FakeRequest(POST, "/webtuplespace/read").
+          withXmlBody(<Tuple><Element><Type>String</Type><Value>avalue1</Value></Element></Tuple>).
+          withHeaders(("Content-Type", "text/xml"))
+        val finalReadResponse = route(finalReadRequest).get
+        status(finalReadResponse) must equalTo(OK)
+        val finalContent = contentAsString(finalReadResponse)
+        val xmlFinalContent = XML.loadString(finalContent)
+        (xmlFinalContent \\ "Tuple").length must equalTo(0)
+      }
+    }
+  }
+
+  def addTwoTuples {
+    // add two tuples to db
+    val tupleWriteRequest1 = FakeRequest(POST, "/webtuplespace/write").
+      withXmlBody(<Tuple>
+      <Element><Type>String</Type><Value>avalue1</Value></Element>
+      <Element><Type>Int</Type><Value>AES</Value></Element>
+    </Tuple>).
+      withHeaders(("Content-Type", "text/xml"))
+    val tupleWriteResponse1 = route(tupleWriteRequest1).get
+    status(tupleWriteResponse1) must equalTo(OK)
+
+    val tupleWriteRequest2 = FakeRequest(POST, "/webtuplespace/write").
+      withXmlBody(<Tuple>
+      <Element><Type>String</Type><Value>avalue1</Value></Element>
+      <Element><Type>Int</Type><Value>IBM</Value></Element>
+    </Tuple>).
+      withHeaders(("Content-Type", "text/xml"))
+    val tupleWriteResponse2 = route(tupleWriteRequest2).get
+    status(tupleWriteResponse2) must equalTo(OK)
   }
 }

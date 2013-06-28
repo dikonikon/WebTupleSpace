@@ -4,22 +4,24 @@
 
 # webtuplespace
 
-PUT     /webtuplespace/write                             controllers.WebTupleSpace.write
+POST     /webtuplespace/write                                 controllers.WebTupleSpace.write
 
-PUT     /webtuplespace/read                              controllers.WebTupleSpace.read
+POST     /webtuplespace/read                                  controllers.WebTupleSpace.read
 
-GET     /webtuplespace/start                             controllers.WebTupleSpace.startSession
+GET      /webtuplespace/start                                 controllers.WebTupleSpace.startSession
 
-PUT     /webtuplespace/subscribe/session/*id             controllers.WebTupleSpace.subscribe(id)
+POST     /webtuplespace/subscribe/session/*id                 controllers.WebTupleSpace.subscribe(id)
 
-GET     /webtuplespace/notifications/session/*id         controllers.WebTupleSpace.notifications(id)
+GET      /webtuplespace/notifications/session/*id             controllers.WebTupleSpace.notifications(id)
 
-GET     /webtuplespace/notificationhistory/session/*id   controllers.WebTupleSpace.notificationHistory(id)
+GET      /webtuplespace/notificationhistory/session/*id       controllers.WebTupleSpace.notificationHistory(id)
 
-GET     /webtuplespace/notificationsreceived/session/*id controllers.WebTupleSpace.notificationsReceived(id)
+GET      /webtuplespace/notificationsreceived/session/*id     controllers.WebTupleSpace.notificationsReceived(id)
+
+POST     /webtuplespace/take                                  controllers.WebTupleSpace.take
 
 # Home page
-GET     /                           controllers.Application.index
+GET      /                                                    controllers.Application.index
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET      /assets/*file                                        controllers.Assets.at(path="/public", file)

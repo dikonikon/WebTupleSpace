@@ -3,6 +3,8 @@ package com.dikonikon.tuplespace
 import com.dikonikon.tuplespace.MongoDBTupleOps._
 import com.mongodb.casbah.WriteConcern
 import com.mongodb.casbah.commons.MongoDBObject
+import play.api.test.FakeRequest
+import play.api.test.Helpers._
 
 /**
  * See: https://github.com/dikonikon
@@ -54,5 +56,4 @@ package object test {
     tuples.remove(MongoDBObject(), WriteConcern.FsyncSafe)
     sessions.remove(MongoDBObject(), WriteConcern.FsyncSafe)
   }
-
 }

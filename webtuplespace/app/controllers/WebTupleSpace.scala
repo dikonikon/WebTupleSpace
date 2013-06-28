@@ -15,12 +15,18 @@ object WebTupleSpace extends Controller {
    * puts a webtuple into the TupleSpace
    * @return
    */
-  def take = Action {
+  def take = Action(parse.xml) {
     request => {
-      val tupleDoc = request.body.asXml
-      val wsTuple = WebTuple(tupleDoc.get)
-
-      Ok("working on it!").as("text/xml")
+      val tupleDoc = request.body
+      Logger.debug("take request body: " + tupleDoc)
+      val wsTuple = WebTuple(tupleDoc)
+      val result = Server.take(wsTuple)
+      val response =
+        <Tuples>
+          {result.map(x => x.toXML)}
+        </Tuples>
+      Logger.debug("take response: " + response.toString)
+      Ok(response).as("text/xml")
     }
   }
 
