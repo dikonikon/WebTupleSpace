@@ -71,11 +71,11 @@ class WebTupleSpaceWebServiceSpec extends Specification {
 
     """given two tuples in the database
       |and a session and subscription that matches them both
-      |two notifications should be returned to the client
-      |and after they have been returned there should be no
-      |current notifications and two notifications in history.
-      |After sending notificationsreceived the notification
-      |history should be empty.
+      |then two notifications should be returned to the client
+      |and after they have been returned
+      |there should be no current notifications and two notifications in history.
+      |and after sending notificationsreceive
+      |the notification history should be empty.
     """ in {
       running(FakeApplication()) {
         cleanTestDB
@@ -146,10 +146,10 @@ class WebTupleSpaceWebServiceSpec extends Specification {
       }
     }
 
-    """given two tuples in the db, when a take
-      |request is sent with a matching pattern the two tuples are returned,
-      |and then a subsequent read using the same pattern will return
-      |no tuples
+    """given two tuples in the db,
+      |when a take request is sent with a matching pattern
+      |them two tuples are returned,
+      |and then a subsequent read using the same pattern will return no tuples
     """ in {
       running(FakeApplication()) {
         cleanTestDB
