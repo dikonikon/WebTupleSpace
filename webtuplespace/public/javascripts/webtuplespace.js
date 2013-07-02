@@ -38,7 +38,7 @@ webtuplespace.WebTuple = function() {
             r += e[1];
             r += "] ";
         }
-        r += " ]";
+        r += "]";
         console.log("stringified WebTuple is: ", r);
         return r;
     }
