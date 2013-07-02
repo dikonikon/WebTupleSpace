@@ -58,10 +58,10 @@ trait WebTuple {
       <Id>{this.id}</Id>
       {
         this.internal.map(x =>
-          <Field>
+          <Element>
             <Type>{x._1}</Type>
             <Value>{x._2}</Value>
-          </Field>)
+          </Element>)
       }
     </Tuple>
   }
