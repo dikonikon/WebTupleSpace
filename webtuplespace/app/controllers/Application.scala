@@ -8,5 +8,8 @@ object Application extends Controller {
   def index = Action {
     Ok(views.html.index("Your new application is ready."))
   }
-  
+
+  def test = Action {
+    Ok(views.html.testrunner())
+  }
 }

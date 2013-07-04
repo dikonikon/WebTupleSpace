@@ -59,14 +59,7 @@ webtuplespace.WebTuple = function() {
         return this.internal[index];
     };
 
-    webtuplespace.WebTuple.prototype.fromXML = function(data) {
-
-    };
-};
-
-function writeSuccess(responseHandler) {
-    return function(xmlDoc, textStatus, jqXHR) {
-        var tuple = new webtuplespace.WebTuple()
+    webtuplespace.WebTuple.prototype.fromXML = function(xmlDoc) {
         var elements = xmlDoc.getElementsByTagName("Element");
         for (var i = 0; i < elements.length; i++) {
             var e = elements[i];
@@ -81,15 +74,15 @@ function writeSuccess(responseHandler) {
             console.log("got value: ", value);
             tupleElement.push(type);
             tupleElement.push(value);
-            tuple.push(tupleElement);
-        }
-        responseHandler(tuple, textStatus);
-    }
+            this.internal.push(tupleElement);
+        };
+    };
 }
 
+
 webtuplespace.Client = function() {
-    // responseHandler will be called with the status code, followed by a WebTuple object is successful
-    webtuplespace.Client.prototype.write = function(tuple, responseHandler) {
+    // responseHandler will be called with the status code as a string, followed by a WebTuple
+    webtuplespace.Client.prototype.write = function(tuple, successHandler, failureHandler) {
         var xml = tuple.toXML()
         var request = $.ajax({
             url: "/webtuplespace/write",
@@ -99,15 +92,26 @@ webtuplespace.Client = function() {
             accepts: "text/xml",
             contentType: "text/xml",
             processData: false,
-            success: writeSuccess(responseHandler),
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert("error: " + errorThrown.toString())
-            }
-        })
-    }
+            success: writeSuccess(successHandler),
+            error: writeFailure(failureHandler)
+            });
+    };
 
+    function writeSuccess(responseHandler) {
+        return function(xmlDoc, textStatus, jqXHR) {
+            var tuple = new webtuplespace.WebTuple();
+            tuple.fromXML(xmlDoc)
+            var idElements = xmlDoc.getElementsByTagName("Id");
+            var idElement = idElements[0];
+            var id = idElement.textContent;
+            responseHandler(tuple, id, textStatus);
+        }
+    };
 
-
-
+    function writeFailure(failureHandler) {
+        return function(jqXHR, textStatus, errorThrown) {
+            failureHandler(jqXHR, textStatus, errorThrown);
+        };
+    };
 };
 
