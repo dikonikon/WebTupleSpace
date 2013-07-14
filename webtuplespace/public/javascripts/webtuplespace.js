@@ -79,39 +79,70 @@ webtuplespace.WebTuple = function() {
     };
 }
 
+function singleTupleSuccessResponseHandlerDecorator(responseHandler) {
+    return function(xmlDoc, textStatus, jqXHR) {
+        var tuple = new webtuplespace.WebTuple();
+        tuple.fromXML(xmlDoc)
+        var idElements = xmlDoc.getElementsByTagName("Id");
+        var idElement = idElements[0];
+        var id = idElement.textContent;
+        responseHandler(tuple, id, textStatus);
+    }
+};
+
+function multipleTupleSuccessResponseHandlerDecorator(responseHandler) {
+    return function(xmlDoc, textStatus, jqXHR) {
+        var tuples = [];
+        var ids = [];
+        var tupleElements = xmlDoc.getElementsByTagName("Tuple");
+        for (var i = 0; i < tuplesElements.length; i++) {
+            var tuple = new webtuplespace.WebTuple();
+            tuple.fromXML(tupleElements[i]);
+            tuples.push(tuple);
+            var idElements = tupleElements[i].getElementsByTagName("Id");
+            var idElement = idElements[0];
+            var id = idElement.textContent;
+            ids.push(id);
+        };
+        responseHandler(tuples, ids, textStatus);
+    }
+}
+
+function plainFailureResponseHandlerDecorator(failureHandler) {
+    return function(jqXHR, textStatus, errorThrown) {
+        failureHandler(jqXHR, textStatus, errorThrown);
+    };
+};
+
 
 webtuplespace.Client = function() {
-    // responseHandler will be called with the status code as a string, followed by a WebTuple
-    webtuplespace.Client.prototype.write = function(tuple, successHandler, failureHandler) {
-        var xml = tuple.toXML()
+
+    function sendRequest(xml, path, verb, successHandlerDecorator, failureHandlerDecorator, successHandler, failureHandler) {
         var request = $.ajax({
-            url: "/webtuplespace/write",
-            type: 'POST',
+            url: "/webtuplespace/" + path,
+            type: verb,
             data: xml,
             dataType: "xml",
             accepts: "text/xml",
             contentType: "text/xml",
             processData: false,
-            success: writeSuccess(successHandler),
-            error: writeFailure(failureHandler)
-            });
+            success: successHandlerDecorator(successHandler),
+            error: failureHandlerDecorator(failureHandler)
+        });
+        return request;
+    }
+
+    webtuplespace.Client.prototype.write = function(tuple, successHandler, failureHandler) {
+        var xml = tuple.toXML();
+        var request = sendRequest(xml, "write", 'POST', singleTupleSuccessResponseHandlerDecorator, plainFailureResponseHandlerDecorator,
+            successHandler, failureHandler);
     };
 
-    function writeSuccess(responseHandler) {
-        return function(xmlDoc, textStatus, jqXHR) {
-            var tuple = new webtuplespace.WebTuple();
-            tuple.fromXML(xmlDoc)
-            var idElements = xmlDoc.getElementsByTagName("Id");
-            var idElement = idElements[0];
-            var id = idElement.textContent;
-            responseHandler(tuple, id, textStatus);
-        }
-    };
 
-    function writeFailure(failureHandler) {
-        return function(jqXHR, textStatus, errorThrown) {
-            failureHandler(jqXHR, textStatus, errorThrown);
-        };
-    };
+    webtuplespace.Client.prototype.read = function(pattern, successHandler, failureHandler) {
+        var xml = pattern.toXML();
+        var request = sendRequest("read", 'POST', multipleTupleSuccessResponseHandlerDecorator, plainFailureResponseHandlerDecorator,
+            successHandler, failureHandler);
+    }
 };
 
