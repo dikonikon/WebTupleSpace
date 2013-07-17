@@ -81,7 +81,9 @@ object WebTupleSpace extends Controller {
       Logger.debug("subscribe request body: " + tupleDoc.toString)
       val wsTuple = WebTuple(tupleDoc)
       Server.subscribe(wsTuple, sessionId)
-      Ok
+      val response = <Status>Success</Status>
+      Logger.debug("response is: " + response.toString)
+      Ok(response).as("text/xml")
     }
   }
 
