@@ -63,7 +63,8 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         val responseBody = contentAsString(readResponse)
         responseBody must contain("<Tuples>")
         val xml = XML.loadString(responseBody)
-        print(xml.toString())
+        println("expecting two tuples:")
+        println(xml.toString())
         (xml \\ "Tuple").size must equalTo(2)
         cleanTestDB
       }
@@ -103,9 +104,10 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         status(getNotifsResponse) must equalTo(OK)
         val notificationsContent = contentAsString(getNotifsResponse)
         val xmlNotificationsContent = XML.loadString(notificationsContent)
-        (xmlNotificationsContent \\ "NotificationsSet").length must equalTo(1)
-        (xmlNotificationsContent \\ "Notifications").length must equalTo(1)
+        (xmlNotificationsContent \\ "Subscriptions").length must equalTo(1)
         (xmlNotificationsContent \\ "Subscription").length must equalTo(1)
+        (xmlNotificationsContent \\ "Pattern").length must equalTo(1)
+        (xmlNotificationsContent \\ "Notifications").length must equalTo(1)
         (xmlNotificationsContent \\ "Tuple").length must equalTo(3) // the subscription plus two notifications
 
         // get notifications again - should be empty now - notifications should have been moved to history
@@ -114,10 +116,11 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         status(secondNotifsResponse) must equalTo(OK)
         val secondNotsContent = contentAsString(secondNotifsResponse)
         val secondXmlNotifs = XML.loadString(secondNotsContent)
-        (secondXmlNotifs \\ "NotificationsSet").length must equalTo(1)
-        (secondXmlNotifs \\ "Notifications").length must equalTo(1)
+        (secondXmlNotifs \\ "Subscriptions").length must equalTo(1)
         (secondXmlNotifs \\ "Subscription").length must equalTo(1)
-        (secondXmlNotifs \\ "Tuple").length must equalTo(1) // just the subscription
+        (secondXmlNotifs \\ "Pattern").length must equalTo(1)
+        (secondXmlNotifs \\ "Notifications").length must equalTo(1)
+        (secondXmlNotifs \\ "Tuple").length must equalTo(1) // just the subscription - Notifications will be empty
 
         // test for notification history
         val notificationHistoryRequest = FakeRequest(GET, "/webtuplespace/notificationhistory/session/" + sessionId)
@@ -125,9 +128,10 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         status(notificationHistoryResponse) must equalTo(OK)
         val histContent = contentAsString(notificationHistoryResponse)
         val xmlHistory = XML.loadString(histContent)
-        (xmlHistory \\ "NotificationsSet").length must equalTo(1)
-        (xmlHistory \\ "Notifications").length must equalTo(1)
+        (xmlHistory \\ "Subscriptions").length must equalTo(1)
         (xmlHistory \\ "Subscription").length must equalTo(1)
+        (xmlHistory \\ "Pattern").length must equalTo(1)
+        (xmlHistory \\ "Notifications").length must equalTo(1)
         (xmlHistory \\ "Tuple").length must equalTo(3) // the pattern and the two historical matches
 
         // send notificationsreceived then check history is empty
@@ -138,10 +142,11 @@ class WebTupleSpaceWebServiceSpec extends Specification {
         status(secondNotificationHistoryResponse) must equalTo(OK)
         val emptyHistContent = contentAsString(secondNotificationHistoryResponse)
         val xmlEmptyHistCont = XML.loadString(emptyHistContent)
-        (xmlEmptyHistCont \\ "NotificationsSet").length must equalTo(1)
-        (xmlEmptyHistCont \\ "Notifications").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Subscriptions").length must equalTo(1)
         (xmlEmptyHistCont \\ "Subscription").length must equalTo(1)
-        (xmlEmptyHistCont \\ "Tuple").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Pattern").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Notifications").length must equalTo(1)
+        (xmlEmptyHistCont \\ "Tuple").length must equalTo(1) // just the pattern
         cleanTestDB
       }
     }

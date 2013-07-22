@@ -36,7 +36,6 @@ webtuplespace.WebTuple.prototype.toXML = function() {
 };
 
 webtuplespace.WebTuple.prototype.toString = function() {
-    console.log("creating stringified WebTuple...")
     var r = "[ ";
     for (var i = 0; i < this.internal.length; i++) {
         r += "[";
@@ -47,7 +46,6 @@ webtuplespace.WebTuple.prototype.toString = function() {
         r += "] ";
     }
     r += "]";
-    console.log("stringified WebTuple is: ", r);
     return r;
 }
 
@@ -233,26 +231,29 @@ webtuplespace.Client.prototype.getNotifications = function(successHandler, failu
     function successDecorator(successHandler) {
         return function(xmlDoc, textStatus, jqXHR) {
             console.log("handling get notifications success");
-            var notificationsSet = [];
-            var notificationsElements = xmlDoc.getElementsByTagName("Notifications");
-            for (var i = 0; i < notificationsElements.length; i++) {
-                var subscriptionElements = notificationsElements[i].getElementsByTagName("Subscription");
-                var subscriptionElement = subscriptionElements[0];
-                var subscription = new webtuplespace.WebTuple();
-                subscription.fromXML(subscriptionElement);
-                notifications = {}
-                notifications.subscription = subscription;
-                notifications.tuples = [];
-                var tupleElements = notificationsElements[i].getElementsByTagName("Tuple");
+            var subscriptions = [];
+            var subscriptionElements = xmlDoc.getElementsByTagName("Subscription");
+            for (var i = 0; i < subscriptionElements.length; i++) {
+                var patternElements = subscriptionElements[i].getElementsByTagName("Pattern");
+                var patternElement = patternElements[0];
+                var patternTupleElements = patternElement.getElementsByTagName("Tuple");
+                var pattern = new webtuplespace.WebTuple();
+                pattern.fromXML(patternTupleElements[0]);
+                var subscription = {};
+                subscription.pattern = pattern;
+                subscription.tuples = [];
+                var notificationsElements = subscriptionElements[i].getElementsByTagName("Notifications");
+                var notificationsElement = notificationsElements[0];
+                var tupleElements = notificationsElement.getElementsByTagName("Tuple");
                 for (var j = 0; j < tupleElements.length; j++) {
                     var tupleElement = tupleElements[j];
                     var tuple = new webtuplespace.WebTuple();
                     tuple.fromXML(tupleElement);
-                    notifications.tuples.push(tuple);
+                    subscription.tuples.push(tuple);
                 }
-                notificationsSet.push(notifications);
+                subscriptions.push(subscription);
             }
-            successHandler(notificationsSet);
+            successHandler(subscriptions);
         }
     }
 

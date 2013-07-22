@@ -115,15 +115,13 @@ object WebTupleSpace extends Controller {
 
   private def toXML(list: List[(WebTuple, List[WebTuple])]) =
 
-      <NotificationsSet>
+      <Subscriptions>
         {list.map(x =>
-          <Notifications>
-            <Subscription>
-              {x._1.toXML}
-            </Subscription>
-            {x._2.map(y => y.toXML)}
-          </Notifications>)}
-      </NotificationsSet>
+          <Subscription>
+            <Pattern>{x._1.toXML}</Pattern>
+            <Notifications>{x._2.map(y => y.toXML)}</Notifications>
+          </Subscription>)}
+      </Subscriptions>
 
   def notificationsReceived(sessionId: String) = Action {
     request => {

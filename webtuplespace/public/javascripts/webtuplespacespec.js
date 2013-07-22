@@ -257,8 +257,13 @@ describe("webtuplespace subscription function, given an initially empty space", 
             runs(function() {
                 expect(result.length).toBe(1);
                 var firstNotifications = result[0];
-                expect(firstNotifications.subscription).toBeDefined();
+                console.log(firstNotifications.pattern.toString());
+                //console.log(firstNotifications.tuples[0].toString());
+                expect(firstNotifications.pattern).toBeDefined();
                 expect(firstNotifications.tuples.length).toBe(2);
             })
         });
 });
+
+// todo: this last test is not working because the writes have been done after the subscription - they should be picked
+// up in the subscription but apparently at the moment they are not - check write
