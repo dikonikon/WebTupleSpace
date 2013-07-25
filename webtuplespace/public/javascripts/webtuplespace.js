@@ -145,131 +145,81 @@ function sendRequest(xml, path, verb, successHandler, failureHandler) {
     return request;
 }
 
-webtuplespace.Client = function() {
-    this.subscriptions = [];
-    this.notificationsListeners = [];
-};
-
-webtuplespace.Client.prototype.setSessionId = function(sid) {
-    this.sessionId = sid;
-};
-
-webtuplespace.Client.prototype.getSessionId = function() {
-    return this.sessionId;
-};
-
-webtuplespace.Client.prototype.addNotificationListener = function(listener) {
-    this.notificationsListeners.push(listener);
-};
-
-webtuplespace.Client.prototype.getNotificationListeners = function() {
-    return this.notificationsListeners;
-}
-
-webtuplespace.Client.prototype.write = function(tuple, successHandler, failureHandler) {
-    var xml = tuple.toXML();
-    var request = sendRequest(xml, "write", 'POST', singleTupleSuccessResponseHandlerDecorator(successHandler),
-        noopFailureResponseHandlerDecorator(failureHandler));
-};
-
-
-webtuplespace.Client.prototype.read = function(pattern, successHandler, failureHandler) {
+function webtuplespace.read(pattern, successHandler, failureHandler) {
     var xml = pattern.toXML();
     var request = sendRequest(xml, "read", 'POST', multipleTupleSuccessResponseHandlerDecorator(successHandler),
         noopFailureResponseHandlerDecorator(failureHandler));
 };
 
-webtuplespace.Client.prototype.startSession = function(successHandler, failureHandler) {
-    function successDecorator(successHandler, client) {
-        return function(xmlDoc, textStatus, jqXHR) {
-            console.log("handling start session success");
-            var sessionElements = xmlDoc.getElementsByTagName("SessionId");
-            var sessionElement = sessionElements[0];
-            var sid = sessionElement.textContent;
-            client.setSessionId(sid);
-            successHandler(sid);
-        }
-    }
-
-    function failureDecorator(failureHandler) {
-        return function(jqXHR, textStatus, error) {
-            console.log("handling start session failure");
-            this.textStatus = textStatus;
-            failureHandler(jqXHR, textStatus, error);
-        }
-    }
-
-    var request = sendRequest(null, "start", 'GET', successDecorator(successHandler, this),
-        failureDecorator(failureHandler));
+function webtuplespace.write(tuple, successHandler, failureHandler) {
+    var xml = tuple.toXML();
+    var request = sendRequest(xml, "write", 'POST', singleTupleSuccessResponseHandlerDecorator(successHandler),
+        noopFailureResponseHandlerDecorator(failureHandler));
 };
 
+webtuplespace.Client = function() {
+    this.sessions = [];
+};
 
-webtuplespace.Client.prototype.addSubscription = function(pattern, successHandler, failureHandler) {
-    function successDecorator(successHandler, client) {
-        return function(xmlDoc, textStatus, jqXHR) {
-            console.log("handling add subscription success");
-            client.subscriptions.push(pattern);
-            successHandler(pattern);
-        }
-    }
+webtuplespace.Client.prototype.write = webtuplespace.write;
 
-    function failureDecorator(failureHandler) {
-        return function(jqXHR, textStatus, error) {
-            console.log("handling add subscription failure");
-            this.textStatus = textStatus;
-            failureHandler(jqXHR, textStatus, error);
-        }
-    }
+webtuplespace.Client.prototype.read = webtuplespace.read;
 
-    var path = "subscribe/session/" + this.getSessionId();
-    console.log("sending request to subscribe to path: " + path);
-    var request = sendRequest(pattern.toXML(), path, 'POST', successDecorator(successHandler, this),
-        failureDecorator(failureHandler));
+webtuplespace.Client.prototype.startSession = function(pattern, notificationHandler) {
+    var sessionHandle = {};
+    sessionHandle.pattern = pattern;
+    sessionHandle.session = new webtuplespace.Session(this, pattern, notificationHandler);
+    this.sessions.push(sessionHandle);
 }
 
-webtuplespace.Client.prototype.getNotifications = function(successHandler, failureHandler) {
-    function successDecorator(successHandler) {
-        return function(xmlDoc, textStatus, jqXHR) {
-            console.log("handling get notifications success");
-            var subscriptions = [];
-            var subscriptionElements = xmlDoc.getElementsByTagName("Subscription");
-            for (var i = 0; i < subscriptionElements.length; i++) {
-                var patternElements = subscriptionElements[i].getElementsByTagName("Pattern");
-                var patternElement = patternElements[0];
-                var patternTupleElements = patternElement.getElementsByTagName("Tuple");
-                var pattern = new webtuplespace.WebTuple();
-                pattern.fromXML(patternTupleElements[0]);
-                var subscription = {};
-                subscription.pattern = pattern;
-                subscription.tuples = [];
-                var notificationsElements = subscriptionElements[i].getElementsByTagName("Notifications");
-                var notificationsElement = notificationsElements[0];
-                var tupleElements = notificationsElement.getElementsByTagName("Tuple");
-                for (var j = 0; j < tupleElements.length; j++) {
-                    var tupleElement = tupleElements[j];
-                    var tuple = new webtuplespace.WebTuple();
-                    tuple.fromXML(tupleElement);
-                    subscription.tuples.push(tuple);
-                }
-                subscriptions.push(subscription);
-            }
-            successHandler(subscriptions);
+webtuplespace.Client.prototype.stopSession = function(pattern) {
+    for (var i = 0; i < this.sessions.length; i++) {
+        var newSessionList = [];
+        if (!this.sessions[i].pattern.equals(pattern)) {
+            newSessionList.push(this.sessions[i]);
+        } else {
+            this.sessions[i].stop();
         }
     }
-
-    function failureDecorator(failureHandler) {
-        return function(jqXHR, textStatus, error) {
-            console.log("handling get notifications failure");
-            this.textStatus = textStatus;
-            failureHandler(jqXHR, textStatus, error);
-        }
-    }
-
-    var path = "notifications/session/" + this.getSessionId();
-    console.log("sending request for notifications to path: " + path);
-    var request = sendRequest(null, path, 'GET', successDecorator(successHandler),
-        failureDecorator(failureHandler));
 }
+
+///////////////////////////////////////////////////////////////
+// webtuplespace.Session: encapsulates notification behaviour:
+// starts polling the tuplespace for matching tuples
+// if a tuple has not previously been found notifies the client
+// using a callback
+///////////////////////////////////////////////////////////////
+
+function pollTupleSpaceFor(session) {
+    function successHandler(tuples, ids, textStatus) {
+        // todo: look at the result of the read request, compare with previous results
+        // then call notificationCallback with any tuples not
+        // previously seen
+
+    }
+
+    function failureHandler() {
+
+    }
+    webtuplespace.read(session.pattern, successHandler, failureHandler)
+}
+
+webtuplespace.Session = function(client, pattern, notificationCallback) {
+    this.client = client;
+    this.pattern = pattern;
+    this.history = [];
+    this.notificationCallback = notificationCallback;
+}
+
+webtuplespace.Session.prototype.start = function() {
+    this.runId = setInterval(pollTupleSpaceFor(this), 2000);
+}
+
+webtuplespace.Session.prototype.stop = function() {
+    clearInterval(this.runId);
+}
+
+
 
 
 

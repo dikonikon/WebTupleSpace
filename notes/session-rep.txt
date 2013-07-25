@@ -8,9 +8,9 @@ Session:
 
 Subscription:
 
-{
-	query: DBObject that matches tuples to this (using hashes)
+{	
 	pattern: DBObject rep of tuple
 	notifications: [ObjectId]
+	notificationHistory: [ObjectId]	
 }
 
