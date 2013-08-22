@@ -87,7 +87,7 @@ This architecture looks something like this:
 
 ![alt text][architecture]
 
-[architecture]: https://github.com/dikonikon/webtuplespace/tree/master/notes/architecture_v1.png "WebTupleSpace Architecture"
+[architecture]: /tree/master/notes/architecture_v1.png "WebTupleSpace Architecture"
 
 
 
