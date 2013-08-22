@@ -66,6 +66,11 @@ webtuplespace.WebTuple.prototype.getTypeAndElement = function(index) {
 };
 
 webtuplespace.WebTuple.prototype.fromXML = function(xmlDoc) {
+    var idElements = xmlDoc.getElementsByTagName("Id");
+    if (idElements.length > 0) {
+        var idElement = idElements[0];
+        this.tupleId = idElement.textContent;
+    }
     var elements = xmlDoc.getElementsByTagName("Element");
     for (var i = 0; i < elements.length; i++) {
         var e = elements[i];
@@ -83,6 +88,14 @@ webtuplespace.WebTuple.prototype.fromXML = function(xmlDoc) {
         this.internal.push(tupleElement);
     };
 };
+
+webtuplespace.WebTuple.prototype.getId = function() {
+    if (this.tupleId) {
+        return this.tupleId;
+    } else {
+        return "";
+    }
+}
 
 //////////////////////////////////////////////////////
 // Client - an object used as a proxy to WebTupleSpace
@@ -145,13 +158,13 @@ function sendRequest(xml, path, verb, successHandler, failureHandler) {
     return request;
 }
 
-function webtuplespace.read(pattern, successHandler, failureHandler) {
+webtuplespace.read = function(pattern, successHandler, failureHandler) {
     var xml = pattern.toXML();
     var request = sendRequest(xml, "read", 'POST', multipleTupleSuccessResponseHandlerDecorator(successHandler),
         noopFailureResponseHandlerDecorator(failureHandler));
 };
 
-function webtuplespace.write(tuple, successHandler, failureHandler) {
+webtuplespace.write = function(tuple, successHandler, failureHandler) {
     var xml = tuple.toXML();
     var request = sendRequest(xml, "write", 'POST', singleTupleSuccessResponseHandlerDecorator(successHandler),
         noopFailureResponseHandlerDecorator(failureHandler));
@@ -165,44 +178,12 @@ webtuplespace.Client.prototype.write = webtuplespace.write;
 
 webtuplespace.Client.prototype.read = webtuplespace.read;
 
-webtuplespace.Client.prototype.startSession = function(pattern, notificationHandler) {
-    var sessionHandle = {};
-    sessionHandle.pattern = pattern;
-    sessionHandle.session = new webtuplespace.Session(this, pattern, notificationHandler);
-    this.sessions.push(sessionHandle);
-}
-
-webtuplespace.Client.prototype.stopSession = function(pattern) {
-    for (var i = 0; i < this.sessions.length; i++) {
-        var newSessionList = [];
-        if (!this.sessions[i].pattern.equals(pattern)) {
-            newSessionList.push(this.sessions[i]);
-        } else {
-            this.sessions[i].stop();
-        }
-    }
-}
-
 ///////////////////////////////////////////////////////////////
-// webtuplespace.Session: encapsulates notification behaviour:
-// starts polling the tuplespace for matching tuples
-// if a tuple has not previously been found notifies the client
-// using a callback
+// webtuplespace.Session: uses WebSockets to maintain an open
+// connection with the server to receive notifications.
+// Terminated by sending a message "END_SESSION".
 ///////////////////////////////////////////////////////////////
 
-function pollTupleSpaceFor(session) {
-    function successHandler(tuples, ids, textStatus) {
-        // todo: look at the result of the read request, compare with previous results
-        // then call notificationCallback with any tuples not
-        // previously seen
-
-    }
-
-    function failureHandler() {
-
-    }
-    webtuplespace.read(session.pattern, successHandler, failureHandler)
-}
 
 webtuplespace.Session = function(client, pattern, notificationCallback) {
     this.client = client;
@@ -212,7 +193,7 @@ webtuplespace.Session = function(client, pattern, notificationCallback) {
 }
 
 webtuplespace.Session.prototype.start = function() {
-    this.runId = setInterval(pollTupleSpaceFor(this), 2000);
+    this.runId = setInterval(pollTupleSpaceFor(this), 2000);    
 }
 
 webtuplespace.Session.prototype.stop = function() {

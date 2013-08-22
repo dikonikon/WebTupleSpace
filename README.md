@@ -30,6 +30,21 @@ A simple way to achieve this latter style of integration is to use a tuplespace 
 
 # Notes on WebTupleSpace' Approach
 
+## Objectives
+
+The primary objectives of WebTupleSpace are:
+
+1. To scale out to very large number of tuples maintaining constant time for search and retrieval
+1. To scale out to very large numbers of clients
+1. To offer consistent and well known behaviour for notifications of matching tuples
+
+With regard to the third objective it is not practically feasible to guarantee that notifications and persisting of tuples of to the space are consistent - that is to guarantee that the client receives a notification when a tuple matching a subscription is added to the space.
+
+WebTupleSpace provides two policies:
+
+1. Notification first - the client may receive notification of tuples that are not in the tuplespace
+2. Persist first - tuples may get added to the space with no notification to the client
+
 ## Matching using Hashes for Sharding, Indexing and Querying
 
 I've worked with tuplespaces such as JavaSpace in the past, and attempted to develop a scalable tuplespace both in Java, and in .net on Windows Azure, utilizing designs that should provide good scale-out performance such as Rings. It's hard work - there are some challenges with tuplespaces. Tuples themselves have a fairly arbitrary structure, and requests to match on tuples can be on any element within a tuple. When you add a tuple to a space you potentially change the way it should best be indexed. When you match on a tuple you are in effect querying on any element of the tuple.
@@ -54,21 +69,23 @@ Each of the individual elements' hash element is indexed by configuring the anti
 }
 ```
 
-## Stateless Servers, Persistent Queueing of Requests and Notifications
+## Scale out and Resilience
 
-As the name implies WebTupleSpace is intended to be used over a WAN or internet, and to scale out to large numbers of tuples and clients. Clearly then it must tolerate failure and must scale horizontally. WebTupleSpace aims to keep the processes providing the request processing and matching behaviour stateless and to keep any processing of requests short-lived, persisting them where necessary and processing them in the background using the Akka actors framework.
+As the name implies WebTupleSpace is intended to be used over a WAN or internet, and to scale out to large numbers of tuples and clients. Clearly then it must tolerate failure and must scale horizontally. All primitive operations on the tuplespace are stateless using simple http requests.
 
-In this way it is possible to configure a tuplespace that is reliable simply by starting clusters of WebTupleSpace Play server instances, and by utilising MongoDB's clustering features. It can be scaled horizontally simply by adding more WebTupleSpace and mongod processes.
+A highly resilient and scalable tuplespace for this primitive read, write and take operations can be created simply by configuring a stateless cluster of Play servers and a standard Mongodb cluster configuration. 
 
-## Reliability of Notifications
+Scale out with number of tuples is achieved by adding mongod instances to the Mongodb cluster, and Mongodb should automatically adjust sharding to optimally distribute tuples to distribute and parallelize search and retrieval.
 
-WebTupleSpace aims to operate in a stateless, connectionless mode, often in an unreliable networking environment such as a WAN or the internet. It is therefore possible for a request for notifications to complete the transaction used to retrieve them from MongoDB and subsequently to fail to successfully transmit them to the client.
+Scale out with number of clients is achieved by simply starting additional instances of Play and adding them to the cluster using a load balancing proxy such as Nginx.
 
-WebTupleSpace therefore supports a strategy that allows the client to ensure that notifications are not lost, by employing a notification history that is updated in the same transaction context as updating the notification list. A transaction in MongoDB is any one read or update on a single collection.
+## Notifications
 
-The notification history is the list of notifications that TupleSpaceServer thinks it has sent to the client as a result of a call to readNotifications. Since it is possible for the read transaction to succeed and the notifications still to fail to get to the client, the following strategy is employed:
-- when notifications are read and returned to the client they are, as part of that transaction, appended to the notification history.
-- if the client experiences a system or communications failure during a read, it can read both the notifications again and the notification history. If this fails again the notification history may be re-read as many times as necessary - it is never deleted until the client calls clearNotificationHistory.
-- once a call to readNotificationHistory succeeds the client can call clearNotificationHistory to remove it. In this way it is possible that notifications will be received more than once - for example if readNotifications succeeds and readNotificationHistory is subsequently called, but, subject to the transactional integrity of the MongoDB server, notifications should not be lost.
+WebTupleSpace aims to avoid querying Mongodb if possible. Push notifications of matches to a pattern are achieved using websockets and [Akka](http://www.akka.io). When a session is started Mongodb is queried once for any existing matches, thereafter as new tuples are added a message is sent to an Akka Actor representing each session and a notification forwarded to the client when a match occurs with the sessions patterns.
+
+This architecture looks something like this:
+
+![alt text](https://github.com/dikonikon/webtuplespace/tree/master/notes/architecture_v1.png "WebTupleSpace Architecture")
+
 
 

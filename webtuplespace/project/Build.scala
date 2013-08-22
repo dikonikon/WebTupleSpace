@@ -12,7 +12,9 @@ object ApplicationBuild extends Build {
     jdbc,
     anorm,
     "org.mongodb" %% "casbah" % "2.5.0",
-    "org.json4s" %% "json4s-native" % "3.2.4"
+    "org.reactivemongo" %% "reactivemongo" % "0.9",
+    "org.json4s" %% "json4s-native" % "3.2.4",
+	"com.typesafe.akka" %% "akka-actor" % "2.3-SNAPSHOT"
   )
 
 
