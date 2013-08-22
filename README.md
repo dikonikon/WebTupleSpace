@@ -85,7 +85,9 @@ WebTupleSpace aims to avoid querying Mongodb if possible. Push notifications of 
 
 This architecture looks something like this:
 
-![alt text](https://github.com/dikonikon/webtuplespace/tree/master/notes/architecture_v1.png "WebTupleSpace Architecture")
+![alt text][architecture]
+
+[architecture]: https://github.com/dikonikon/webtuplespace/tree/master/notes/architecture_v1.png "WebTupleSpace Architecture"
 
 
 
