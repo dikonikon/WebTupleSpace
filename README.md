@@ -34,11 +34,12 @@ A simple way to achieve this latter style of integration is to use a tuplespace 
 
 The primary objectives of WebTupleSpace are:
 
+1. To provide an implementation on a technology stack that is suitable for use over the internet
 1. To scale out to very large number of tuples maintaining constant time for search and retrieval
 1. To scale out to very large numbers of clients
 1. To offer consistent and well known behaviour for notifications of matching tuples
 
-With regard to the third objective it is not practically feasible to guarantee that notifications and persisting of tuples of to the space are consistent - that is to guarantee that the client receives a notification when a tuple matching a subscription is added to the space.
+With regard to the third objective it is not practically feasible to guarantee that writing of tuples to the space are consistent with notifications - that is to guarantee that the client receives a notification when a tuple matching a subscription is added to the space.
 
 WebTupleSpace provides two policies:
 
