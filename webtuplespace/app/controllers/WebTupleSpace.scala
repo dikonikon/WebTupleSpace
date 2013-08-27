@@ -2,8 +2,12 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import play.api.Logger
 import com.dikonikon.tuplespace.WebTuple
 import com.dikonikon.tuplespace.Server
+import com.dikonikon.tuplespace.akka.SimpleOutActor
+import play.api.libs.iteratee.{Iteratee, Concurrent}
+import akka.actor.{ActorRef, Props, ActorSystem}
 
 
 
@@ -11,6 +15,10 @@ import com.dikonikon.tuplespace.Server
 // todo: partially done: interceptor wraps as html, want an xml restful style response
 
 object WebTupleSpace extends Controller {
+  val system = ActorSystem("SessionManagement")
+
+
+
   /**
    * puts a webtuple into the TupleSpace
    * @return
@@ -57,59 +65,21 @@ object WebTupleSpace extends Controller {
     }
   }
 
-  def startSession = Action {
-    request => {
-      Logger.debug("start session received ")
-      val sessionId = Server.startSession()
-      val response =
-          <SessionId>{sessionId}</SessionId>
-      Logger.debug("response is: " + response.toString)
-      Ok(response).as("text/xml")
-    }
-  }
-
-  def endSession = Action {
-    request => {
-      Ok("not implemented").as("text/xml")
-    }
-  }
-
-  def subscribe(sessionId: String) = Action(parse.xml) {
-    request => {
-      val tupleDoc = request.body
-      Logger.debug("subscribe request received for: " + sessionId)
-      Logger.debug("subscribe request body: " + tupleDoc.toString)
-      val wsTuple = WebTuple(tupleDoc)
-      Server.subscribe(wsTuple, sessionId)
-      val response = <Status>Success</Status>
-      Logger.debug("response is: " + response.toString)
-      Ok(response).as("text/xml")
-    }
-  }
-
-  def unsubscribe = Action {
-    request => {
-      Ok("not implemented").as("text/xml")
-    }
-  }
-
-  def notifications(sessionId: String) = Action {
-    request => {
-      Logger.debug("notifications request received for session: " + sessionId)
-      val notifications = Server.notifications(sessionId)
-      val response = toXML(notifications)
-      Logger.debug("notifications response is: " + response.toString)
-      Ok(response).as("text/xml")
-    }
-  }
-
-  def notificationHistory(sessionId: String) = Action {
-    request => {
-      Logger.debug("notifications history request received for session: " + sessionId)
-      val history = Server.notificationHistory(sessionId)
-      val response = toXML(history)
-      Logger.debug("notifications history response is: " + response.toString)
-      Ok(response).as("text/xml")
+  def session = WebSocket.using[String] { request => {
+      Logger.debug("received WebSocket request")
+      var outActor: ActorRef = null
+      val out = Concurrent.unicast[String]( channel => {
+          Logger.debug("getting new Actor")
+          outActor = system.actorOf(Props[SimpleOutActor[String]])
+          Logger.debug("sending channel")
+          outActor ! channel
+          },
+        () => Unit,
+        (_, _) => Unit)
+      val in = Iteratee.foreach[String]( x => {println(x); outActor ! "--" + x + "--" } ).mapDone { _ =>
+        println("Disconnected")
+      }
+      (in, out)
     }
   }
 
@@ -122,14 +92,4 @@ object WebTupleSpace extends Controller {
             <Notifications>{x._2.map(y => y.toXML)}</Notifications>
           </Subscription>)}
       </Subscriptions>
-
-  def notificationsReceived(sessionId: String) = Action {
-    request => {
-      Logger.debug("notifications received request received for session: " + sessionId)
-      Server.notificationsReceived(sessionId)
-      Logger.debug("successfully cleared notification history for session: " + sessionId)
-      Ok
-    }
-  }
-
 }

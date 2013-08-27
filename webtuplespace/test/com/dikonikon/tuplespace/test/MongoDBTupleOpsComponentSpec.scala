@@ -16,9 +16,6 @@ import play.api.test.Helpers._
 import com.dikonikon.tuplespace.MongoDBTupleOps._
 import org.bson.types.ObjectId
 import com.mongodb.casbah.commons.{MongoDBObject, MongoDBList}
-import com.dikonikon.tuplespace.NoSessionFoundException
-import com.dikonikon.tuplespace.NoNotificationFound
-import com.dikonikon.tuplespace.NoSubscriptionFound
 import com.mongodb.{BasicDBList, DBObject}
 
 
@@ -32,20 +29,6 @@ class MongoDBTupleOpsComponentSpec extends Specification {
       val pattern = testPattern
       val result: List[WebTuple] = findMatchingTuples(pattern)
       result.size should be equalTo(1)
-      cleanTestDB
-    }
-  }
-
-  "create Session followed by add Subscription" should {
-    "result in a session, subscription and notification" in {
-      cleanTestDB
-      createTestWebTuples
-      val sessionId = createSession()
-      addSubscription(testPattern, sessionId)
-      val notifications = readNotifications(sessionId)
-      notifications.length must equalTo(1)
-      val (pattern, matches) = notifications.head
-      pattern must equalTo(testPattern)
       cleanTestDB
     }
   }
